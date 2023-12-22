@@ -71,10 +71,15 @@ const renewFilter = () => {
         const currentProgram = speaker.querySelector('[filter-field="program"]')
         const currentName = speaker.querySelector('.item-data .link-11')
         const currentSubtitle = speaker.querySelector('.item-data .text-block-70');
+         const currentParagraph = speaker.querySelector('.item-data .paragraph-18'); // Selecting paragraph-18
 
-        console.log("Selected Subtitle Element:", currentSubtitle); // Debugging subtitle element
+        // Debugging
+        console.log("Selected Subtitle Element:", currentSubtitle);
+        console.log("Selected Paragraph Element:", currentParagraph);
         const subtitleText = currentSubtitle ? currentSubtitle.innerText : "No subtitle";
-        console.log("Subtitle Text:", subtitleText); // Debugging subtitle text
+        const paragraphText = currentParagraph ? currentParagraph.innerText : "No paragraph";
+        console.log("Subtitle Text:", subtitleText);
+        console.log("Paragraph Text:", paragraphText);
 
         if (topic.length > 0) { 
             pass = topic.some((element) => { return currentTopic.innerText.includes(element) || currentSubTopic.innerText.includes(element) }); 
@@ -105,14 +110,16 @@ const renewFilter = () => {
             setSimilarSpeakers(pass, speaker);
         }
 
-          if (search && pass) {
+        if (search && pass) {
             const expression = new RegExp(`${search}.*`, "i");
             const name = currentName?.innerText;
-            console.log("Search Term:", search); // Debugging search term
-            console.log("Matching against Name:", expression.test(name)); // Debugging name match
+            console.log("Search Term:", search);
+            console.log("Matching against Name:", expression.test(name));
 
-            pass = expression.test(name) || (currentSubtitle && expression.test(subtitleText));
-            console.log("Matching against Subtitle:", expression.test(subtitleText)); // Debugging subtitle match
+            // Checking if the search term matches the name, subtitle, or paragraph
+            pass = expression.test(name) || expression.test(subtitleText) || expression.test(paragraphText);
+            console.log("Matching against Subtitle:", expression.test(subtitleText));
+            console.log("Matching against Paragraph:", expression.test(paragraphText));
             setSimilarSpeakers(pass, speaker);
         }
 
