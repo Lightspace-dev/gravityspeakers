@@ -103,12 +103,14 @@ const renewFilter = () => {
             setSimilarSpeakers(pass, speaker);
         }
 
-        if (search && pass) {
-           const expression = new RegExp(`\\b${search}\\b`, "i");
+            if (search && pass) {
+            const expression = new RegExp(`\\b${search}\\b`, "i");
             const name = currentName?.innerText;
             const subtitle = currentSubtitle ? currentSubtitle.innerText : "";
             const paragraph = currentParagraph ? currentParagraph.innerText : "";
-            pass = expression.test(name) || expression.test(subtitleText) || expression.test(paragraphText);
+
+            // Updated condition to use 'subtitle' and 'paragraph'
+            pass = expression.test(name) || expression.test(subtitle) || expression.test(paragraph);
             setSimilarSpeakers(pass, speaker);
         }
 
