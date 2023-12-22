@@ -73,13 +73,6 @@ const renewFilter = () => {
         const currentSubtitle = speaker.querySelector('.item-data .text-block-70');
          const currentParagraph = speaker.querySelector('.item-data .paragraph-18'); // Selecting paragraph-18
 
-        // Debugging
-        console.log("Selected Subtitle Element:", currentSubtitle);
-        console.log("Selected Paragraph Element:", currentParagraph);
-        const subtitleText = currentSubtitle ? currentSubtitle.innerText : "No subtitle";
-        const paragraphText = currentParagraph ? currentParagraph.innerText : "No paragraph";
-        console.log("Subtitle Text:", subtitleText);
-        console.log("Paragraph Text:", paragraphText);
 
         if (topic.length > 0) { 
             pass = topic.some((element) => { return currentTopic.innerText.includes(element) || currentSubTopic.innerText.includes(element) }); 
@@ -111,15 +104,11 @@ const renewFilter = () => {
         }
 
         if (search && pass) {
-            const expression = new RegExp(`${search}.*`, "i");
+           const expression = new RegExp(`\\b${search}\\b`, "i");
             const name = currentName?.innerText;
-            console.log("Search Term:", search);
-            console.log("Matching against Name:", expression.test(name));
-
-            // Checking if the search term matches the name, subtitle, or paragraph
+            const subtitle = currentSubtitle ? currentSubtitle.innerText : "";
+            const paragraph = currentParagraph ? currentParagraph.innerText : "";
             pass = expression.test(name) || expression.test(subtitleText) || expression.test(paragraphText);
-            console.log("Matching against Subtitle:", expression.test(subtitleText));
-            console.log("Matching against Paragraph:", expression.test(paragraphText));
             setSimilarSpeakers(pass, speaker);
         }
 
