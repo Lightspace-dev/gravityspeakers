@@ -71,10 +71,8 @@ const renewFilter = () => {
         const currentProgram = speaker.querySelector('[filter-field="program"]')
         const currentName = speaker.querySelector('.item-data .link-11')
         const currentSubtitle = speaker.querySelector('.item-data .text-block-70');
+         const currentParagraph = speaker.querySelector('.item-data .paragraph-18'); // Selecting paragraph-18
 
-        console.log("Selected Subtitle Element:", currentSubtitle); // Debugging subtitle element
-        const subtitleText = currentSubtitle ? currentSubtitle.innerText : "No subtitle";
-        console.log("Subtitle Text:", subtitleText); // Debugging subtitle text
 
         if (topic.length > 0) { 
             pass = topic.some((element) => { return currentTopic.innerText.includes(element) || currentSubTopic.innerText.includes(element) }); 
@@ -105,14 +103,14 @@ const renewFilter = () => {
             setSimilarSpeakers(pass, speaker);
         }
 
-          if (search && pass) {
-            const expression = new RegExp(`${search}.*`, "i");
+            if (search && pass) {
+            const expression = new RegExp(`\\b${search}\\b`, "i");
             const name = currentName?.innerText;
-            console.log("Search Term:", search); // Debugging search term
-            console.log("Matching against Name:", expression.test(name)); // Debugging name match
+            const subtitle = currentSubtitle ? currentSubtitle.innerText : "";
+            const paragraph = currentParagraph ? currentParagraph.innerText : "";
 
-            pass = expression.test(name) || (currentSubtitle && expression.test(subtitleText));
-            console.log("Matching against Subtitle:", expression.test(subtitleText)); // Debugging subtitle match
+            // Updated condition to use 'subtitle' and 'paragraph'
+            pass = expression.test(name) || expression.test(subtitle) || expression.test(paragraph);
             setSimilarSpeakers(pass, speaker);
         }
 
