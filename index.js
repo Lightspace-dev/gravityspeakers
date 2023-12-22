@@ -72,6 +72,10 @@ const renewFilter = () => {
         const currentName = speaker.querySelector('.item-data .link-11')
         const currentSubtitle = speaker.querySelector('.item-data .text-block-70');
 
+        console.log("Selected Subtitle Element:", currentSubtitle); // Debugging subtitle element
+        const subtitleText = currentSubtitle ? currentSubtitle.innerText : "No subtitle";
+        console.log("Subtitle Text:", subtitleText); // Debugging subtitle text
+
         if (topic.length > 0) { 
             pass = topic.some((element) => { return currentTopic.innerText.includes(element) || currentSubTopic.innerText.includes(element) }); 
             setSimilarSpeakers(pass, speaker);
@@ -101,11 +105,14 @@ const renewFilter = () => {
             setSimilarSpeakers(pass, speaker);
         }
 
-        if(search && pass ) { 
-            const expresion = new RegExp(`${search}.*`, "i");
+          if (search && pass) {
+            const expression = new RegExp(`${search}.*`, "i");
             const name = currentName?.innerText;
-             const subtitle = currentSubtitle?.innerText;
-            pass = expression.test(name) || expression.test(subtitle);
+            console.log("Search Term:", search); // Debugging search term
+            console.log("Matching against Name:", expression.test(name)); // Debugging name match
+
+            pass = expression.test(name) || (currentSubtitle && expression.test(subtitleText));
+            console.log("Matching against Subtitle:", expression.test(subtitleText)); // Debugging subtitle match
             setSimilarSpeakers(pass, speaker);
         }
 
