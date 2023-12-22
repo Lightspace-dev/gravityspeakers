@@ -70,7 +70,7 @@ const renewFilter = () => {
         const currentFee = speaker.querySelector('.wrapper-fee');
         const currentProgram = speaker.querySelector('[filter-field="program"]')
         const currentName = speaker.querySelector('.item-data .link-11')
-        const currentSubtitle = speaker.querySelector('.Text Block 70');
+        const currentSubtitle = speaker.querySelector('.item-data .text-block-70');
 
         if (topic.length > 0) { 
             pass = topic.some((element) => { return currentTopic.innerText.includes(element) || currentSubTopic.innerText.includes(element) }); 
