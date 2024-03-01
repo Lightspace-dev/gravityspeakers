@@ -56,3 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+function updateWishlistCount() {
+    const wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers')) || [];
+    const count = wishlist.length;
+    const wishlistCountElement = document.getElementById('hb-count'); // This targets the count element within your button
+    if(wishlistCountElement) wishlistCountElement.textContent = count; // Update the count displayed
+}
+
