@@ -1,4 +1,5 @@
- const wishAdd = document.querySelectorAll('.speaker-wish-g.add');
+document.addEventListener('DOMContentLoaded', function () {
+    const wishAdd = document.querySelectorAll('.speaker-wish-g.add');
     const wishRemove = document.querySelectorAll('.speaker-wish-g.remove');
 
     // Function to update the wish list count
@@ -58,3 +59,6 @@
             } else {
                 alert("Sorry, your browser does not support Web Storage...");
             }
+        });
+    });
+});
