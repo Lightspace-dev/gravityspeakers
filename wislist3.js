@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Initialized wishlistSpeakers in localStorage.');
     }
 
+    // Update button visibility based on wishlist state
+    setButtonVisibility();
+
     // Function to add a speaker to the wishlist
     function addToWishlist(speakerId) {
         let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
@@ -14,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
             wishlist.push(speakerId);
             localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
             console.log(`Added speaker ${speakerId} to wishlist.`);
+            updateWishlistCount(); // Ensure this function is defined or moved here if you decide to merge scripts
+            setButtonVisibility();
         } else {
             console.log(`Speaker ${speakerId} is already in the wishlist.`);
         }
@@ -22,20 +27,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to remove a speaker from the wishlist
     function removeFromWishlist(speakerId) {
         let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
-        const initialLength = wishlist.length;
         wishlist = wishlist.filter(id => id !== speakerId);
-        if (wishlist.length < initialLength) {
-            console.log(`Removed speaker ${speakerId} from wishlist.`);
-            localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
-        } else {
-            console.log(`Speaker ${speakerId} was not found in the wishlist.`);
-        }
+        localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
+        console.log(`Removed speaker ${speakerId} from wishlist.`);
+        updateWishlistCount(); // Ensure this function is defined or moved here if you decide to merge scripts
+        setButtonVisibility();
     }
 
     // Attach click event listeners to "Add to Wishlist" buttons
-    const addButtons = document.querySelectorAll('.div-sp-sl-wrapper-add');
-    console.log(`Found ${addButtons.length} 'Add to Wishlist' buttons.`);
-    addButtons.forEach(button => {
+    document.querySelectorAll('.div-sp-sl-wrapper-add').forEach(button => {
         button.addEventListener('click', function(event) {
             event.preventDefault();
             const speakerId = this.getAttribute('data-speaker-id');
@@ -45,9 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Attach click event listeners to "Remove from Wishlist" buttons
-    const removeButtons = document.querySelectorAll('.div-sp-sl-wrapper-remove');
-    console.log(`Found ${removeButtons.length} 'Remove from Wishlist' buttons.`);
-    removeButtons.forEach(button => {
+    document.querySelectorAll('.div-sp-sl-wrapper-remove').forEach(button => {
         button.addEventListener('click', function(event) {
             event.preventDefault();
             const speakerId = this.getAttribute('data-speaker-id');
@@ -56,10 +54,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-function updateWishlistCount() {
-    const wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers')) || [];
-    const count = wishlist.length;
-    const wishlistCountElement = document.getElementById('hb-count'); // This targets the count element within your button
-    if(wishlistCountElement) wishlistCountElement.textContent = count; // Update the count displayed
-}
 
+function setButtonVisibility() {
+    const wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers')) || [];
+    document.querySelectorAll('[data-speaker-id]').forEach(button => {
+        const speakerId = button.getAttribute('data-speaker-id');
+        if (wishlist.includes(speakerId)) {
+            document.querySelector(`.div-sp-sl-wrapper-add[data-speaker-id="${speakerId}"]`).style.display = 'none';
+            document.querySelector(`.div-sp-sl-wrapper-remove[data-speaker-id="${speakerId}"]`).style.display = 'block';
+        } else {
+            document.querySelector(`.div-sp-sl-wrapper-add[data-speaker-id="${speakerId}"]`).style.display = 'block';
+            document.querySelector(`.div-sp-sl-wrapper-remove[data-speaker-id="${speakerId}"]`).style.display = 'none';
+        }
+    });
+}
