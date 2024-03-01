@@ -1,68 +1,44 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize wishlist in localStorage if it doesn't exist
     if (!localStorage.getItem('wishlistSpeakers')) {
         localStorage.setItem('wishlistSpeakers', JSON.stringify([]));
     }
-});
-function addToWishlist(speakerId) {
-    // Retrieve the wishlist from localStorage and parse it into an array
-    let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
-    
-    // Check if the speakerId is not already in the wishlist
-    if (!wishlist.includes(speakerId)) {
-        // Add the speakerId to the wishlist array
-        wishlist.push(speakerId);
-        // Save the updated array back to localStorage
-        localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
-        // Optionally, update UI here (will be covered in a later step)
+
+    // Function to add a speaker to the wishlist
+    function addToWishlist(speakerId) {
+        let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
+        if (!wishlist.includes(speakerId)) {
+            wishlist.push(speakerId);
+            localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
+            // Optionally, update UI here
+        }
     }
-}
-document.addEventListener('DOMContentLoaded', function() {
-    // Query all "Add to Wishlist" buttons
-    const addButtons = document.querySelectorAll('.div-sp-sl-wrapper-add');
 
-    // Attach click event listeners to each button
-    addButtons.forEach(button => {
+    // Function to remove a speaker from the wishlist
+    function removeFromWishlist(speakerId) {
+        let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
+        wishlist = wishlist.filter(id => id !== speakerId);
+        localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
+        // Optionally, update UI here
+    }
+
+    // Attach click event listeners to "Add to Wishlist" buttons
+    document.querySelectorAll('.div-sp-sl-wrapper-add').forEach(button => {
         button.addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent any default action
-
-            // Assuming each button has a data attribute like 'data-speaker-id' that stores the speaker's unique ID
+            event.preventDefault();
             const speakerId = this.getAttribute('data-speaker-id');
-
-            // Call the addToWishlist function with the speaker's ID
             addToWishlist(speakerId);
-
-            // Optional: Update the button's appearance or disable it to indicate the speaker has been added
+            // Optional: Update the button's appearance
         });
     });
-});
-function removeFromWishlist(speakerId) {
-    // Retrieve the current wishlist from localStorage and parse it into an array
-    let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
 
-    // Filter out the speakerId to be removed
-    wishlist = wishlist.filter(id => id !== speakerId);
-
-    // Save the updated array back to localStorage
-    localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
-
-    // Optionally, update UI here (this could involve re-enabling the "Add to Wishlist" button, etc.)
-}
-document.addEventListener('DOMContentLoaded', function() {
-    // Query all "Remove from Wishlist" buttons
-    const removeButtons = document.querySelectorAll('.div-sp-sl-wrapper-remove');
-
-    // Attach click event listeners to each button
-    removeButtons.forEach(button => {
+    // Attach click event listeners to "Remove from Wishlist" buttons
+    document.querySelectorAll('.div-sp-sl-wrapper-remove').forEach(button => {
         button.addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent any default action
-
-            // Assuming each button has a data attribute like 'data-speaker-id' for the speaker's unique ID
+            event.preventDefault();
             const speakerId = this.getAttribute('data-speaker-id');
-
-            // Call the removeFromWishlist function with the speaker's ID
             removeFromWishlist(speakerId);
-
-            // Optional: Update the button's appearance or re-enable the "Add to Wishlist" button
+            // Optional: Update the button's appearance
         });
     });
 });
