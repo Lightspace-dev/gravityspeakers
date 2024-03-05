@@ -69,37 +69,22 @@ function isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange) {
            (selectedRange.min >= speakerFeeRange.min && selectedRange.max <= speakerFeeRange.max);
 }
 
-// Adjusted filterSpeakersByFee to correctly handle "Any Fee" and "Please inquire"
 function filterSpeakersByFee(feeSelection, speakerFeeInfo) {
-    const selectedFeeRange = convertToRange(feeSelection);
-
-    // If "Any Fee" is selected, all speakers should match.
-    if (selectedFeeRange.showAny) {
+    // Directly return true if "Any Fee" is selected, showing all speakers.
+    if (feeSelection === "Any Fee") {
         return true;
     }
 
-    // Optionally, decide how to handle "Please inquire"
-    const includesInquire = Array.from(speakerFeeInfo.querySelectorAll('.label-fee'))
-        .some(feeRangeElement => feeRangeElement.innerText.toLowerCase().includes("please inquire"));
+    const feeRanges = Array.from(speakerFeeInfo.querySelectorAll('.label-fee'));
+    return feeRanges.some(feeRangeElement => {
+        // Normalize both strings for comparison
+        const speakerFeeText = feeRangeElement.getAttribute('filter-field').toLowerCase().trim();
+        const normalizedFeeSelection = feeSelection.toLowerCase().trim();
 
-    // Adjust logic based on policy for "Please inquire"
-    if (includesInquire && selectedFeeRange.inquirePolicy) {
-        return true;
-    }
-
-    return Array.from(speakerFeeInfo.querySelectorAll('.label-fee')).some(feeRangeElement => {
-        const speakerFeeText = feeRangeElement.getAttribute('filter-field').replace(/\*/g, ''); // Handle asterisks
-        if (speakerFeeText.toLowerCase().includes("please inquire")) {
-            // Adjust based on policy
-            return selectedFeeRange.inquirePolicy;
-        }
-        const speakerFeeRange = convertToRange(speakerFeeText);
-        return isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange);
+        // Check for an exact match between the speaker's fee option and the selected fee range
+        return speakerFeeText === normalizedFeeSelection;
     });
 }
-
-
-
 
 const renewFilter = () => {
     const { topic, fee, location, program, search } = select;
