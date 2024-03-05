@@ -69,22 +69,35 @@ function isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange) {
            (selectedRange.min >= speakerFeeRange.min && selectedRange.max <= speakerFeeRange.max);
 }
 
+// Adjusted filterSpeakersByFee to correctly handle "Any Fee" and "Please inquire"
 function filterSpeakersByFee(feeSelection, speakerFeeInfo) {
     const selectedFeeRange = convertToRange(feeSelection);
-    // Directly include speakers with "Please inquire" if your policy is to show them by default
-    const includesInquire = Array.from(speakerFeeInfo.querySelectorAll('.label-fee'))
-        .some(feeRangeElement => feeRangeElement.innerText.toLowerCase() === "please inquire");
 
-    if (selectedFeeRange.showAny || includesInquire) {
-        return true; // If "Any Fee" or "Please inquire" is encountered, match the speaker.
+    // If "Any Fee" is selected, all speakers should match.
+    if (selectedFeeRange.showAny) {
+        return true;
+    }
+
+    // Optionally, decide how to handle "Please inquire"
+    const includesInquire = Array.from(speakerFeeInfo.querySelectorAll('.label-fee'))
+        .some(feeRangeElement => feeRangeElement.innerText.toLowerCase().includes("please inquire"));
+
+    // Adjust logic based on policy for "Please inquire"
+    if (includesInquire && selectedFeeRange.inquirePolicy) {
+        return true;
     }
 
     return Array.from(speakerFeeInfo.querySelectorAll('.label-fee')).some(feeRangeElement => {
         const speakerFeeText = feeRangeElement.getAttribute('filter-field').replace(/\*/g, ''); // Handle asterisks
+        if (speakerFeeText.toLowerCase().includes("please inquire")) {
+            // Adjust based on policy
+            return selectedFeeRange.inquirePolicy;
+        }
         const speakerFeeRange = convertToRange(speakerFeeText);
         return isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange);
     });
 }
+
 
 
 
