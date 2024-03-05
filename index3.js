@@ -70,21 +70,24 @@ function isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange) {
 }
 
 function filterSpeakersByFee(feeSelection, speakerFeeInfo) {
-    // Directly return true if "Any Fee" is selected, showing all speakers.
+    // Handle "Any Fee" selection explicitly to show all speakers.
     if (feeSelection === "Any Fee") {
         return true;
     }
 
+    // Convert NodeList to Array for easier manipulation.
     const feeRanges = Array.from(speakerFeeInfo.querySelectorAll('.label-fee'));
-    return feeRanges.some(feeRangeElement => {
-        // Normalize both strings for comparison
-        const speakerFeeText = feeRangeElement.getAttribute('filter-field').toLowerCase().trim();
-        const normalizedFeeSelection = feeSelection.toLowerCase().trim();
 
-        // Check for an exact match between the speaker's fee option and the selected fee range
-        return speakerFeeText === normalizedFeeSelection;
+    // Check for an exact match between the fee selection and one of the speaker's fee options.
+    return feeRanges.some(feeRangeElement => {
+        // Retrieve the fee option text, trimming whitespace for accurate comparison.
+        const speakerFeeText = feeRangeElement.getAttribute('filter-field').trim();
+
+        // Check for an exact match between the normalized (case-insensitive) fee option and the selection.
+        return speakerFeeText.toLowerCase() === feeSelection.toLowerCase();
     });
 }
+
 
 const renewFilter = () => {
     const { topic, fee, location, program, search } = select;
