@@ -27,27 +27,29 @@ const showSimilarSpeakers = () => {
 }
 
 function convertToRange(str) {
-    console.log('Converting string to range:', str); // Debugging statement
-    if (str.includes("or above")) {
-        const number = parseInt(str.replace(/[^0-9]/g, ''));
-        console.log({ min: number, max: Infinity }); // Debugging statement
+    // Handling "Please inquire" as a special case with a specific flag
+    if (str.toLowerCase() === "please inquire") {
+        return { inquire: true };
+    }
+    // Removing asterisks and handling numbers normally afterwards
+    const cleanedStr = str.replace(/\*/g, '');
+    if (cleanedStr.includes("or above")) {
+        const number = parseInt(cleanedStr.replace(/[^0-9]/g, ''));
         return { min: number, max: Infinity };
-    } else if (str.includes("or under")) {
-        const number = parseInt(str.replace(/[^0-9]/g, ''));
-        console.log({ min: -Infinity, max: number }); // Debugging statement
+    } else if (cleanedStr.includes("or under")) {
+        const number = parseInt(cleanedStr.replace(/[^0-9]/g, ''));
         return { min: -Infinity, max: number };
-    } else if (str.includes("Any Fee")) {
-        console.log({ showAny: true }); // Debugging statement
+    } else if (cleanedStr.includes("Any Fee")) {
         return { showAny: true };
     } else {
-        const numbers = str.replace(/[^0-9\-]/g, '').split('-').map(Number);
-        console.log({ min: numbers[0], max: numbers[1] }); // Debugging statement
+        const numbers = cleanedStr.replace(/[^0-9\-]/g, '').split('-').map(Number);
         return {
             min: numbers[0],
             max: numbers[1]
         };
     }
 }
+
 
 
 function isPartiallyWithinRange(target, range) {
@@ -68,13 +70,22 @@ function isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange) {
 }
 
 function filterSpeakersByFee(feeSelection, speakerFeeInfo) {
-    // Assuming speakerFeeInfo is the element containing the fee information
-    const feeRanges = speakerFeeInfo.querySelectorAll('.label-fee');
-    return Array.from(feeRanges).some(feeRangeElement => {
-        const speakerFeeRange = convertToRange(feeRangeElement.getAttribute('filter-field'));
-        return isWithinAnyOfTheRanges(speakerFeeRange, feeSelection);
+    const selectedFeeRange = convertToRange(feeSelection);
+    // Directly include speakers with "Please inquire" if your policy is to show them by default
+    const includesInquire = Array.from(speakerFeeInfo.querySelectorAll('.label-fee'))
+        .some(feeRangeElement => feeRangeElement.innerText.toLowerCase() === "please inquire");
+
+    if (selectedFeeRange.showAny || includesInquire) {
+        return true; // If "Any Fee" or "Please inquire" is encountered, match the speaker.
+    }
+
+    return Array.from(speakerFeeInfo.querySelectorAll('.label-fee')).some(feeRangeElement => {
+        const speakerFeeText = feeRangeElement.getAttribute('filter-field').replace(/\*/g, ''); // Handle asterisks
+        const speakerFeeRange = convertToRange(speakerFeeText);
+        return isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange);
     });
 }
+
 
 
 const renewFilter = () => {
