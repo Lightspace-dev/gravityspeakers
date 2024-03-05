@@ -26,34 +26,22 @@ const showSimilarSpeakers = () => {
     })
 }
 
-/*function convertToRange(str) {
-    if (str.includes("or above")) {
-        const number = parseInt(str.replace(/[^0-9]/g, ''));
-        return { min: number, max: Infinity };
-    } else if (str.includes("or under")) {
-        const number = parseInt(str.replace(/[^0-9]/g, ''));
-        return { min: -Infinity, max: number };
-    } else if (str.includes("Any Fee")) {
-        return { showAny: true };
-    } else {
-        const numbers = str.replace(/[^0-9\-]/g, '').split('-').map(Number);
-        return {
-            min: Math.min(...numbers),
-            max: Math.max(...numbers)
-        };
-    }
-}*/
 function convertToRange(str) {
+    console.log('Converting string to range:', str); // Debugging statement
     if (str.includes("or above")) {
         const number = parseInt(str.replace(/[^0-9]/g, ''));
+        console.log({ min: number, max: Infinity }); // Debugging statement
         return { min: number, max: Infinity };
     } else if (str.includes("or under")) {
         const number = parseInt(str.replace(/[^0-9]/g, ''));
+        console.log({ min: -Infinity, max: number }); // Debugging statement
         return { min: -Infinity, max: number };
     } else if (str.includes("Any Fee")) {
+        console.log({ showAny: true }); // Debugging statement
         return { showAny: true };
     } else {
         const numbers = str.replace(/[^0-9\-]/g, '').split('-').map(Number);
+        console.log({ min: numbers[0], max: numbers[1] }); // Debugging statement
         return {
             min: numbers[0],
             max: numbers[1]
@@ -61,16 +49,10 @@ function convertToRange(str) {
     }
 }
 
+
 function isPartiallyWithinRange(target, range) {
     return (target.min >= range.min && target.min <= range.max) || (target.max >= range.min && target.max <= range.max) || (range.min >= target.min && range.max <= target.max);
 }
-
-/*function isWithinAnyOfTheRanges(number, specificRanges) {
-    return specificRanges.some(range => {
-        const rangeLimits = convertToRange(range);
-        return isPartiallyWithinRange(number, rangeLimits);
-    });
-}*/
 
 function isWithinAnyOfTheRanges(speakerFeeRange, selectedFeeRange) {
     // Convert the selected fee range from the filter to a numeric range for comparison
@@ -119,27 +101,28 @@ const renewFilter = () => {
             setSimilarSpeakers(pass, speaker);
         }
 
-      /*  if (fee.length > 0 && pass) {
-            pass = fee.some((itemFee) => { 
-                const numberRange = convertToRange(itemFee);
-                const rangeValues = currentFee.querySelectorAll('[filter-field]:not(.w-dyn-bind-empty)');
-                if (!numberRange.hasOwnProperty('showAny')) {
-                    const specificRanges = [...rangeValues].map((element) => element.innerText.trim());
-                    return isWithinAnyOfTheRanges(numberRange, specificRanges);
-                } else {
-                    return true;
-                }
-            })
-            setSimilarSpeakers(pass, speaker);
-        }*/
         
-        if (fee.length > 0 && pass) {
+  if (fee.length > 0 && pass) {
     pass = fee.some(itemFee => {
-        const feeElement = speaker.querySelector('.wrapper-fee'); // Assuming this contains the fee range elements
-        return filterSpeakersByFee(itemFee, feeElement);
+        const feeElement = speaker.querySelector('.wrapper-fee');
+        const feeRanges = feeElement.querySelectorAll('.label-fee');
+
+        // Extracting fee ranges from the speaker element
+        const speakerFees = Array.from(feeRanges).map(feeRange => feeRange.getAttribute('filter-field'));
+        
+        // Debug: Log extracted fees
+        console.log('Speaker Fees:', speakerFees);
+
+        // Determine if any of the speaker's fees fall within the selected range
+        return speakerFees.some(speakerFee => {
+            const feeRange = convertToRange(speakerFee);
+            const selectedFeeRange = convertToRange(itemFee);
+            return isPartiallyWithinRange(feeRange, selectedFeeRange);
+        });
     });
     setSimilarSpeakers(pass, speaker);
 }
+
 
         if (location.length > 0 && pass) { 
             pass = location.some((element) => { return currentLocation.innerText.includes(element) });
