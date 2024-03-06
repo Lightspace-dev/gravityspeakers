@@ -26,11 +26,6 @@ const showSimilarSpeakers = () => {
     });
 }
 
-// store current search session in localstorage
-const saveFilterState = () => {
-    sessionStorage.setItem('searchPrevious', JSON.stringify(select));
-};
-
 function convertToRange(str) {
     if (!str || str.toLowerCase() === "please inquire" || str.trim() === '') {
         return null;
@@ -322,43 +317,63 @@ const updateTotalSpeakers = () => {
     }
 }
 
+const saveFilterState = () => {
+    sessionStorage.setItem('searchPrevious', JSON.stringify(select));
+    updateResetButtonVisibility();
+};
+
 const renewSearchPrevious = () => {
     const searchPreviousJSON = sessionStorage.getItem("searchPrevious");
     if (searchPreviousJSON) {
         const searchPrevious = JSON.parse(searchPreviousJSON);
-        // Restore each filter state from `searchPrevious` to `select`
         Object.keys(searchPrevious).forEach(key => {
             select[key] = searchPrevious[key];
-            // Additionally, update UI elements for each filter
-            if (key !== 'search' && select[key].length > 0) { // Check if the filter has selections
-                const labelContainer = document.querySelector(`.${key}-label`);
-                if (labelContainer) {
-                    labelContainer.innerHTML = ''; // Clear current labels
-                    select[key].forEach(item => {
-                        // Create a new label for each selected filter item
-                        const filterLabel = document.createElement('div');
-                        filterLabel.className = 'result-select';
-                        filterLabel.innerHTML = `${item}<span class="remove-select-span" data-remove="${item}" data-property="${key}">X</span>`;
-                        labelContainer.appendChild(filterLabel);
-                        labelContainer.parentElement.classList.remove('hidden'); // Make sure the container is visible
-                    });
+        });
+
+        renewFilter();
+
+        // Reflect the restored filter states in the UI
+        Object.keys(select).forEach(key => {
+            if (select[key].length > 0 || (key === 'search' && select[key])) {
+                if (key !== 'search') {
+                    setSelected(`${key}-label`, key);
+                } else {
+                    document.querySelector('.text-field-7.w-input').value = select.search;
                 }
             }
         });
 
-        // Special handling for search input if needed
-        if (searchPrevious['search']) {
-            document.querySelector('.text-field-7.w-input').value = searchPrevious['search'];
-        }
+        updateTotalSpeakers();
+    }
+    updateResetButtonVisibility();
+};
 
-        // Re-apply filters based on restored states
-        renewFilter();
+const resetFilters = () => {
+    select = { topic: [], fee: [], location: [], program: [], search: '' };
+    sessionStorage.removeItem("searchPrevious");
+    document.querySelector('.text-field-7.w-input').value = '';
+    renewFilter();
+    updateTotalSpeakers();
+    updateResetButtonVisibility(); // Hide the reset button after filters are cleared
+};
+
+// Call this function to show/hide the reset button based on filter state
+const updateResetButtonVisibility = () => {
+    const hasActiveFilters = Object.values(select).some(value => value.length > 0 || (typeof value === 'string' && value.trim()));
+    const resetButton = document.getElementById('resetFilters');
+    if (hasActiveFilters) {
+        resetButton.style.display = 'block';
+    } else {
+        resetButton.style.display = 'none';
     }
 };
 
+document.getElementById('resetFilters').addEventListener('click', resetFilters);
 
-
-
+// Initial setup
+document.addEventListener('DOMContentLoaded', (event) => {
+    renewSearchPrevious();
+});
 
 intervalState = setInterval(() => {
     if (document.readyState === 'complete') {
@@ -370,6 +385,6 @@ intervalState = setInterval(() => {
         setProgramFilter();
         setInputSearch();
         setEventCloseTab();
-        renewSearchPrevious(); // Ensure this is called after all setup functions
+        renewSearchPrevious(); // Restore and apply filter states upon page load
     }
 }, 100);
