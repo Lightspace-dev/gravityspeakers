@@ -26,6 +26,11 @@ const showSimilarSpeakers = () => {
     });
 }
 
+// store current search session in localstorage
+const saveFilterState = () => {
+    sessionStorage.setItem('searchPrevious', JSON.stringify(select));
+};
+
 function convertToRange(str) {
     if (!str || str.toLowerCase() === "please inquire" || str.trim() === '') {
         return null;
@@ -162,6 +167,7 @@ const setTopicsFilter = () => {
             if(!topic.includes(value)) topic.push(value);
             renewFilter();
             setSelected('topic-label', 'topic');
+            saveFilterState(); // Save state whenever the search input changes
             updateTotalSpeakers();
         });
     });
@@ -175,6 +181,7 @@ const setTopicsFilter = () => {
 
             renewFilter();
             setSelected('topic-label', 'topic');
+            saveFilterState(); // Save state whenever the search input changes
             updateTotalSpeakers();
         });
     });
@@ -189,6 +196,7 @@ const setFeeFilter = () => {
             if(!fee.includes(number)) fee.push(number);
             renewFilter();
             setSelected('fee-label', 'fee');
+            saveFilterState(); // Save state whenever the search input changes
             updateTotalSpeakers();
         });
     });
@@ -218,6 +226,7 @@ const setLocationFilter = () => {
                 if(!location.includes(value)) location.push(value);
                 renewFilter();
                 setSelected('location-label', 'location');
+                saveFilterState(); // Save state whenever the search input changes
                 updateTotalSpeakers();
             });
         })
@@ -240,6 +249,7 @@ const setProgramFilter = () => {
             if(!program.includes(value)) program.push(value);
             renewFilter();
             setSelected('program-label', 'program');
+            saveFilterState(); // Save state whenever the search input changes
             updateTotalSpeakers();
         });
     })
@@ -266,20 +276,23 @@ const setCloseFilters = () => {
     })
 }
 
+
 const setInputSearch = () => {
     inputSearch = document.querySelector('.text-field-7.w-input');
     let timeOut;
 
-    inputSearch?.addEventListener('keyup', (e) => {
+    inputSearch.addEventListener('keyup', (e) => {
         clearTimeout(timeOut);
 
-        timeOut = setTimeout(()=> {
+        timeOut = setTimeout(() => {
             select['search'] = inputSearch.value;
+            saveFilterState(); // Save state whenever the search input changes
             renewFilter();
             updateTotalSpeakers();
-        }, 200)
+        }, 200);
     });
-}
+};
+
 
 const setEventCloseTab = () => {
     const tabs = document.querySelectorAll('.tab-link-filters');
@@ -327,6 +340,9 @@ const renewSearchPrevious = () => {
         }
     }
 };
+
+
+
 
 intervalState = setInterval(() => {
     if (document.readyState === 'complete') {
