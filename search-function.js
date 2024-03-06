@@ -321,25 +321,41 @@ const updateTotalSpeakers = () => {
         wrapperSpeakersNotFound.style.display = 'block';
     }
 }
+
 const renewSearchPrevious = () => {
     const searchPreviousJSON = sessionStorage.getItem("searchPrevious");
     if (searchPreviousJSON) {
         const searchPrevious = JSON.parse(searchPreviousJSON);
-        // Assume `select` is your filter state object structure
-        if (searchPrevious) {
-            // Restore each filter state from `searchPrevious` to `select`
-            Object.keys(searchPrevious).forEach(key => {
-                select[key] = searchPrevious[key];
-            });
+        // Restore each filter state from `searchPrevious` to `select`
+        Object.keys(searchPrevious).forEach(key => {
+            select[key] = searchPrevious[key];
+            // Additionally, update UI elements for each filter
+            if (key !== 'search' && select[key].length > 0) { // Check if the filter has selections
+                const labelContainer = document.querySelector(`.${key}-label`);
+                if (labelContainer) {
+                    labelContainer.innerHTML = ''; // Clear current labels
+                    select[key].forEach(item => {
+                        // Create a new label for each selected filter item
+                        const filterLabel = document.createElement('div');
+                        filterLabel.className = 'result-select';
+                        filterLabel.innerHTML = `${item}<span class="remove-select-span" data-remove="${item}" data-property="${key}">X</span>`;
+                        labelContainer.appendChild(filterLabel);
+                        labelContainer.parentElement.classList.remove('hidden'); // Make sure the container is visible
+                    });
+                }
+            }
+        });
 
-            // Re-apply filters based on restored states
-            renewFilter();
-
-            // Optional: Update UI elements to reflect the restored filter states
-            // This could involve setting checkboxes, input fields, etc., to match `select`
+        // Special handling for search input if needed
+        if (searchPrevious['search']) {
+            document.querySelector('.text-field-7.w-input').value = searchPrevious['search'];
         }
+
+        // Re-apply filters based on restored states
+        renewFilter();
     }
 };
+
 
 
 
