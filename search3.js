@@ -98,12 +98,15 @@ const renewFilter = () => {
             });
         }
 
-        // Text Search Filter
+          // Text Search Filter - Enhanced
         if (search.trim() !== '' && pass) {
-            const name = speaker.querySelector('.item-data .link-11').textContent;
-            const subtitle = speaker.querySelector('.item-data .text-block-70')?.textContent || "";
-            const paragraph = speaker.querySelector('.item-data .paragraph-18')?.textContent || "";
-            pass = pass && (name.includes(search) || subtitle.includes(search) || paragraph.includes(search));
+            const searchText = search.trim().toLowerCase(); // Normalize search text
+            const name = speaker.querySelector('.item-data .link-11').textContent.toLowerCase(); // Normalize speaker name
+            const subtitle = (speaker.querySelector('.item-data .text-block-70')?.textContent || "").toLowerCase();
+            const paragraph = (speaker.querySelector('.item-data .paragraph-18')?.textContent || "").toLowerCase();
+
+            // Check if any normalized text includes the normalized search text
+            pass = name.includes(searchText) || subtitle.includes(searchText) || paragraph.includes(searchText);
         }
 
         speaker.style.display = pass ? 'block' : 'none';
