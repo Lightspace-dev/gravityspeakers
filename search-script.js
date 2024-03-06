@@ -298,6 +298,25 @@ const updateTotalSpeakers = () => {
         wrapperSpeakersNotFound.style.display = 'block';
     }
 }
+const renewSearchPrevious = () => {
+    const searchPreviousJSON = sessionStorage.getItem("searchPrevious");
+    if (searchPreviousJSON) {
+        const searchPrevious = JSON.parse(searchPreviousJSON);
+        // Assume `select` is your filter state object structure
+        if (searchPrevious) {
+            // Restore each filter state from `searchPrevious` to `select`
+            Object.keys(searchPrevious).forEach(key => {
+                select[key] = searchPrevious[key];
+            });
+
+            // Re-apply filters based on restored states
+            renewFilter();
+
+            // Optional: Update UI elements to reflect the restored filter states
+            // This could involve setting checkboxes, input fields, etc., to match `select`
+        }
+    }
+};
 
 intervalState = setInterval(() => {
     if (document.readyState === 'complete') {
@@ -309,6 +328,6 @@ intervalState = setInterval(() => {
         setProgramFilter();
         setInputSearch();
         setEventCloseTab();
-        renewSearchPrevious();
+        renewSearchPrevious(); // Ensure this is called after all setup functions
     }
 }, 100);
