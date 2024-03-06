@@ -6,58 +6,53 @@ let similarSpeakers = [];
 let hiddenTabs;
 let inputSearch;
 
-// Initializes the hidden tab click functionality
 const setHiddenClick = () => {
     hiddenTabs = document.querySelector('.tab-link-select-programa-2');
 }
 
-// Simulates a click on the hidden tab
 const hidden = () => {
     hiddenTabs.click();
 }
 
-// Manages similar speakers based on filtering criteria
 const setSimilarSpeakers = (pass, speaker) => {
     if(pass && !similarSpeakers.includes(speaker)){
         similarSpeakers.push(speaker);
     }
 }
 
-// Displays similar speakers based on filtering results
 const showSimilarSpeakers = () => {
     similarSpeakers.slice(0, 3).forEach((similar) => {
         similar.style.display = 'block';
-    })
+    });
 }
 
-// Converts a fee string to a range object for comparison
 function convertToRange(str) {
-    if (str.toLowerCase() === "please inquire") {
-        return { inquire: true };
+    if (!str || str.toLowerCase() === "please inquire" || str.trim() === '') {
+        return null; // Excludes "Please inquire" or empty strings from numeric comparison
     }
-    const cleanedStr = str.replace(/\*/g, '');
+    const cleanedStr = str.replace(/\$|,|\s+/g, ''); // Removes $ sign, commas, and whitespace
     if (cleanedStr.includes("or above")) {
         const number = parseInt(cleanedStr.replace(/[^0-9]/g, ''), 10);
         return { min: number, max: Infinity };
-    } else if (cleanedStr.includes("or under")) {
-        const number = parseInt(cleanedStr.replace(/[^0-9]/g, ''), 10);
-        return { min: -Infinity, max: number };
-    } else if (cleanedStr.includes("Any Fee")) {
-        return { showAny: true };
-    } else {
-        const numbers = cleanedStr.split('-').map(Number);
+    } else if (cleanedStr.includes("-")) {
+        const numbers = cleanedStr.split('-').map(part => parseInt(part, 10));
         return { min: numbers[0], max: numbers[1] };
+    } else {
+        const number = parseInt(cleanedStr, 10);
+        if (!isNaN(number)) {
+            return { min: number, max: number }; // Treats single numbers as exact amounts
+        }
     }
+    return null; // Fallback for any non-numeric strings
 }
 
-// Determines if a target fee range is partially within a selected fee range
 function isPartiallyWithinRange(target, range) {
+    if (!target || !range) return false;
     return (target.min >= range.min && target.min <= range.max) || 
            (target.max >= range.min && target.max <= range.max) || 
            (range.min >= target.min && range.max <= target.max);
 }
 
-// Refreshes the filter and updates the display based on selected criteria
 const renewFilter = () => {
     const { topic, fee, location, program, search } = select;
     sessionStorage.setItem('searchPrevious', JSON.stringify(select));
@@ -67,39 +62,30 @@ const renewFilter = () => {
 
     allSpeakers.forEach((speaker) => {
         let pass = true;
-        const speakerName = speaker.querySelector('.link-11').innerText; // Assuming this is the speaker name selector
-        const currentTopic = speaker.querySelector('[filter-field="topic"]');
-        const currentSubTopic = speaker.querySelector('[filter-field="subtopic"]');
-        const currentLocation = speaker.querySelector('[filter-field="location"]');
+        const speakerName = speaker.querySelector('.link-11').innerText;
         const currentFee = speaker.querySelector('.wrapper-fee');
-        const currentProgram = speaker.querySelector('[filter-field="program"]');
-
-        // Filtering logic for topic, location, program, and custom search criteria
 
         if (fee.length > 0 && pass) {
             pass = fee.some(feeFilter => {
+                if (feeFilter === "Any Fee") return true; // Selects all speakers for "Any Fees"
+
+                const selectedFeeRange = convertToRange(feeFilter);
                 const feeRanges = currentFee.querySelectorAll('.label-fee');
-                const feePasses = Array.from(feeRanges).map(feeRange => {
-                    const feeText = feeRange.getAttribute('filter-field').trim();
-                    const feeRangeObj = convertToRange(feeText);
-                    return isPartiallyWithinRange(feeRangeObj, convertToRange(feeFilter));
+                return Array.from(feeRanges).some(feeRangeElement => {
+                    const feeText = feeRangeElement.getAttribute('filter-field').trim();
+                    const feeRange = convertToRange(feeText);
+                    return isPartiallyWithinRange(feeRange, selectedFeeRange);
                 });
-
-                // Improved logging for debugging
-                if (feePasses.includes(true)) {
-                    console.log(`Speaker: ${speakerName}, Fees: ${JSON.stringify(feeRanges)} Passes Filter: ${feeFilter}`);
-                }
-                return feePasses.includes(true);
             });
+
+            if (pass) {
+                console.log(`Speaker: ${speakerName}, Passes Filter: ${fee.join(", ")}`);
+            }
         }
 
-        // Update display based on filtering result
-        if (pass) {
-            speaker.style.display = 'block';
-            resultListFilter.push(speaker);
-        } else {
-            speaker.style.display = 'none';
-        }
+        // Updating display based on filtering result
+        speaker.style.display = pass ? 'block' : 'none';
+        if (pass) resultListFilter.push(speaker);
     });
 
     // Handling for no filters applied
@@ -108,7 +94,6 @@ const renewFilter = () => {
         document.querySelector('.wrapper-results').classList.add('hidden');
     }
 }
-
 const showOrHiddenLabels = (current, listValue, remove, option) => {
     if (listValue.length > 0){
         current.innerHTML = listValue.map((element) => {
