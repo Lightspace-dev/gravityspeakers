@@ -297,8 +297,9 @@ const setEventCloseTab = () => {
 const updateTotalSpeakers = () => {
     const totalElement = document.querySelector('.total');
     const wrapperSpeakersNotFound = document.querySelector('.wrapper-speaker-not-found');
-    if (visibleSpeakers.length > 0) {
-        totalElement.textContent = visibleSpeakers.length;
+    // Use resultListFilter.length to get the count of visible speakers after filtering
+    if (resultListFilter.length > 0) {
+        totalElement.textContent = resultListFilter.length; // Display the count
         wrapperSpeakersNotFound.style.display = 'none';
     } else {
         wrapperSpeakersNotFound.style.display = 'block';
