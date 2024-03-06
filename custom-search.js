@@ -251,25 +251,27 @@ const setProgramFilter = () => {
 }
 
 const setCloseFilters = () => {
-    const allBtns = document.querySelectorAll('.remove-select-span');
-
-    allBtns.forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const { property, remove } = btn.dataset;
-            const objectRemove = select[property].filter(( element ) => element != remove );
-            select[property] = objectRemove
-            selectedFilter[property].value = objectRemove;
-            renewFilter();
-            updateTotalSpeakers();
-            if(objectRemove.length === 0) {
-                btn.closest('.w-layout-hflex').classList.add('hidden');
-                delete selectedFilter[property]
+    document.querySelector('.wrapper-results').addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-select-span')) {
+            const property = e.target.getAttribute('data-property');
+            const removeValue = e.target.getAttribute('data-remove');
+            select[property] = select[property].filter(item => item !== removeValue);
+            
+            saveFilterState(); // Save the updated state to sessionStorage
+            renewFilter(); // Reapply filters based on updated select object
+            
+            // Update UI to reflect the removal
+            if (select[property].length === 0) {
+                document.querySelector(`.${property}-label`).parentElement.classList.add('hidden');
+            } else {
+                setSelected(`${property}-label`, property);
             }
-            btn.parentElement.remove();
-        });
-    })
-}
+            
+            updateResetButtonVisibility(); // Check if the reset button should be shown or hidden
+        }
+    });
+};
+
 
 
 const setInputSearch = () => {
@@ -331,44 +333,44 @@ const renewSearchPrevious = () => {
         });
 
         renewFilter();
-
-        // Reflect the restored filter states in the UI
-        Object.keys(select).forEach(key => {
-            if (select[key].length > 0 || (key === 'search' && select[key])) {
-                if (key !== 'search') {
-                    setSelected(`${key}-label`, key);
-                } else {
-                    document.querySelector('.text-field-7.w-input').value = select.search;
-                }
+        
+        // Update UI for each filter type
+        ['topic', 'fee', 'location', 'program'].forEach(filterType => {
+            if (select[filterType].length) {
+                setSelected(`${filterType}-label`, filterType);
             }
         });
+
+        if (select.search) {
+            inputSearch.value = select.search; // Restore the search input value
+            setSelected('search', 'search'); // Optionally update the UI for the search filter
+        }
 
         updateTotalSpeakers();
     }
     updateResetButtonVisibility();
 };
 
-const resetFilters = () => {
-    select = { topic: [], fee: [], location: [], program: [], search: '' };
-    sessionStorage.removeItem("searchPrevious");
-    document.querySelector('.text-field-7.w-input').value = '';
-    renewFilter();
-    updateTotalSpeakers();
-    updateResetButtonVisibility(); // Hide the reset button after filters are cleared
-};
-
-// Call this function to show/hide the reset button based on filter state
 const updateResetButtonVisibility = () => {
-    const hasActiveFilters = Object.values(select).some(value => value.length > 0 || (typeof value === 'string' && value.trim()));
     const resetButton = document.getElementById('resetFilters');
-    if (hasActiveFilters) {
-        resetButton.style.display = 'block';
-    } else {
-        resetButton.style.display = 'none';
+    if (resetButton) {
+        const anyFiltersActive = Object.values(select).some(arr => arr.length > 0) || select.search;
+        resetButton.style.display = anyFiltersActive ? 'block' : 'none';
     }
 };
 
+const resetFilters = () => {
+    select = { topic: [], fee: [], location: [], program: [], search: '' };
+    inputSearch.value = '';
+    sessionStorage.removeItem('searchPrevious');
+    renewFilter();
+    updateTotalSpeakers();
+    updateResetButtonVisibility();
+};
+
 document.getElementById('resetFilters').addEventListener('click', resetFilters);
+
+
 
 // Initial setup
 document.addEventListener('DOMContentLoaded', (event) => {
