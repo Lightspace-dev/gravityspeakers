@@ -109,7 +109,184 @@ const renewFilter = () => {
     updateTotalSpeakers();
 }
 
-// Assuming setTopicsFilter, setFeeFilter, setLocationFilter, setProgramFilter, setInputSearch, and other initialization functions are defined here
+const showOrHiddenLabels = (current, listValue, remove, option) => {
+    if (listValue.length > 0){
+        current.innerHTML = listValue.map((element) => {
+            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='${option}'>X</span></div>`
+        }).join(' ');
+        setCloseFilters();
+    } 
+    if (remove) {
+        current.parentElement.classList.remove('hidden');
+    } else { 
+        current.parentElement.classList.add('hidden');
+    }
+}
+
+const setSelected = (label, option) => {
+
+    const currentOption = select[option];
+    selectedFilter[option] = { 'label': label, value: currentOption };
+    if (selectedFilter) {
+        const wrapperResults = document.querySelector('.wrapper-results');
+        wrapperResults.classList.remove('hidden');
+
+        Object.entries(selectedFilter).forEach(([one, two]) => {
+            const { label, value } = two;
+            const currentLabel = document.querySelector(`.${label}`);
+            currentLabel.innerHTML = '';
+            showOrHiddenLabels(currentLabel, value, true, one);
+        })
+        hidden();
+    }
+}
+
+const setTopicsFilter = () => {
+    const topics = document.querySelectorAll('.label-topic');
+    const subTopics = document.querySelectorAll('.label-subtopic');
+
+    topics.forEach(element => {
+        element.addEventListener('click', (e) => {
+            e.preventDefault();
+            const value = element.getAttribute('filter-topic');
+            const { topic } = select;
+            if(!topic.includes(value)) topic.push(value);
+            renewFilter();
+            setSelected('topic-label', 'topic');
+            updateTotalSpeakers();
+        });
+    });
+
+    subTopics.forEach(element => {
+        element.addEventListener('click', (e) => {
+            e.preventDefault();
+            const value = element.getAttribute('filter-subtopic');
+            const { topic } = select;
+            if(!topic.includes(value)) topic.push(value);
+
+            renewFilter();
+            setSelected('topic-label', 'topic');
+            updateTotalSpeakers();
+        });
+    });
+}
+
+const setFeeFilter = () => {
+    const elements = document.querySelectorAll('.text-range-item');
+    elements.forEach((item) => {
+        item.addEventListener('click', (e) => {
+            const number = item.getAttribute('filter-fee');
+            const { fee } = select;
+            if(!fee.includes(number)) fee.push(number);
+            renewFilter();
+            setSelected('fee-label', 'fee');
+            updateTotalSpeakers();
+        });
+    });
+}
+
+const setLocationFilter = () => {
+
+    const locations = [];
+    const removeRepeat = () => {
+        const labelsLocations = document.querySelectorAll('.label-locations');
+        labelsLocations.forEach((location) => {
+            if (locations.includes(location.innerText)) {
+                location.parentElement.remove();
+            } else {
+                locations.push(location.innerText)
+            }
+        })
+    }
+
+    const setEventClick = () => {
+        const labelsLocations = document.querySelectorAll('.label-locations');
+        labelsLocations.forEach((lc) => {
+            lc.addEventListener('click', (e) => {
+                e.preventDefault();
+                const value = lc.getAttribute('filter-location');
+                const { location } = select;
+                if(!location.includes(value)) location.push(value);
+                renewFilter();
+                setSelected('location-label', 'location');
+                updateTotalSpeakers();
+            });
+        })
+    }
+
+    removeRepeat();
+    setEventClick();
+}
+
+const setProgramFilter = () => {
+
+    const programs = document.querySelectorAll('.label-program');
+    
+    programs.forEach((pr) => {
+        pr.addEventListener('click', (e) => {
+            e.preventDefault();
+            const value = pr.getAttribute('filter-program');
+
+            const { program } = select;
+            if(!program.includes(value)) program.push(value);
+            renewFilter();
+            setSelected('program-label', 'program');
+            updateTotalSpeakers();
+        });
+    })
+}
+
+const setCloseFilters = () => {
+    const allBtns = document.querySelectorAll('.remove-select-span');
+
+    allBtns.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const { property, remove } = btn.dataset;
+            const objectRemove = select[property].filter(( element ) => element != remove );
+            select[property] = objectRemove
+            selectedFilter[property].value = objectRemove;
+            renewFilter();
+            updateTotalSpeakers();
+            if(objectRemove.length === 0) {
+                btn.closest('.w-layout-hflex').classList.add('hidden');
+                delete selectedFilter[property]
+            }
+            btn.parentElement.remove();
+        });
+    })
+}
+
+const setInputSearch = () => {
+    inputSearch = document.querySelector('.text-field-7.w-input');
+    let timeOut;
+
+    inputSearch?.addEventListener('keyup', (e) => {
+        clearTimeout(timeOut);
+
+        timeOut = setTimeout(()=> {
+            select['search'] = inputSearch.value;
+            renewFilter();
+            updateTotalSpeakers();
+        }, 200)
+    });
+}
+
+const setEventCloseTab = () => {
+    const tabs = document.querySelectorAll('.tab-link-filters');
+    let s = 0;
+    tabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            if(tab.classList.contains('w--current') && s > 0){
+                setTimeout(() => {
+                    hiddenTabs.click();
+                }, 50)
+            }
+            s = 1;
+        });
+    });
+}
 
 const updateTotalSpeakers = () => {
     const totalElement = document.querySelector('.total');
