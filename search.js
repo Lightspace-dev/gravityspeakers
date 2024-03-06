@@ -55,32 +55,41 @@ function isPartiallyWithinRange(target, range) {
 
 const renewFilter = () => {
     const { topic, fee, location, program, search } = select;
-    sessionStorage.setItem('searchPrevious', JSON.stringify(select));
+    // Debugging to see current filter states
+    console.log("Current filters:", { topic, fee, location, program, search });
+
     const allSpeakers = document.querySelectorAll('.collection-list-search .w-dyn-item');
-    resultListFilter = [];
-    similarSpeakers = [];
+    resultListFilter = []; // Reset the list of filtered speakers
 
     allSpeakers.forEach((speaker) => {
         let pass = true;
-        const currentTopic = speaker.querySelector('[filter-field="topic"]');
-        const currentSubTopic = speaker.querySelector('[filter-field="subtopic"]');
-        const currentLocation = speaker.querySelector('[filter-field="location"]');
-        const currentFee = speaker.querySelector('.wrapper-fee');
-        const currentProgram = speaker.querySelector('[filter-field="program"]');
-        const currentName = speaker.querySelector('.item-data .link-11').textContent;
-        const currentSubtitle = speaker.querySelector('.item-data .text-block-70');
-        const currentParagraph = speaker.querySelector('.item-data .paragraph-18');
 
-        if (topic.length > 0) { 
-            pass = topic.some(element => currentTopic.innerText.includes(element) || currentSubTopic.innerText.includes(element)); 
+        // Topic Filter
+        if (topic.length > 0) {
+            const currentTopic = speaker.querySelector('[filter-field="topic"]').innerText;
+            const currentSubTopic = speaker.querySelector('[filter-field="subtopic"]').innerText;
+            pass = pass && topic.some(t => currentTopic.includes(t) || currentSubTopic.includes(t));
         }
 
+        // Location Filter
+        if (location.length > 0 && pass) {
+            const currentLocation = speaker.querySelector('[filter-field="location"]').innerText;
+            pass = pass && location.includes(currentLocation);
+        }
+
+        // Program Filter
+        if (program.length > 0 && pass) {
+            const currentProgram = speaker.querySelector('[filter-field="program"]').innerText;
+            pass = pass && program.includes(currentProgram);
+        }
+
+        // Fee Filter
         if (fee.length > 0 && pass) {
             pass = fee.some(feeFilter => {
-                if (feeFilter === "Any Fee") return true;
+                if (feeFilter === "Any Fee") return true; // Selects all speakers for "Any Fees"
 
                 const selectedFeeRange = convertToRange(feeFilter);
-                const feeRanges = currentFee.querySelectorAll('.label-fee');
+                const feeRanges = speaker.querySelector('.wrapper-fee').querySelectorAll('.label-fee');
                 return Array.from(feeRanges).some(feeRangeElement => {
                     const feeText = feeRangeElement.getAttribute('filter-field').trim();
                     const feeRange = convertToRange(feeText);
@@ -89,25 +98,22 @@ const renewFilter = () => {
             });
         }
 
-        if (location.length > 0 && pass) { 
-            pass = location.some(element => currentLocation.innerText.includes(element));
-        }
-
-        if (program.length > 0 && pass) { 
-            pass = program.some(element => currentProgram.innerText.includes(element));
-        }
-
-        if (search && pass) {
-            const expression = new RegExp(search, "i");
-            pass = expression.test(currentName) || expression.test(currentSubtitle.innerText) || expression.test(currentParagraph.innerText);
+        // Text Search Filter
+        if (search.trim() !== '' && pass) {
+            const name = speaker.querySelector('.item-data .link-11').textContent;
+            const subtitle = speaker.querySelector('.item-data .text-block-70')?.textContent || "";
+            const paragraph = speaker.querySelector('.item-data .paragraph-18')?.textContent || "";
+            pass = pass && (name.includes(search) || subtitle.includes(search) || paragraph.includes(search));
         }
 
         speaker.style.display = pass ? 'block' : 'none';
         if (pass) resultListFilter.push(speaker);
     });
 
+    // After applying all filters, update UI as necessary
     updateTotalSpeakers();
-}
+};
+
 
 const showOrHiddenLabels = (current, listValue, remove, option) => {
     if (listValue.length > 0){
