@@ -133,7 +133,6 @@ const showOrHiddenLabels = (current, listValue, remove, option) => {
 }
 
 const setSelected = (label, option) => {
-
     const currentOption = select[option];
     selectedFilter[option] = { 'label': label, value: currentOption };
     if (selectedFilter) {
@@ -148,7 +147,11 @@ const setSelected = (label, option) => {
         })
         hidden();
     }
+
+    // Save the updated filter state
+    saveFilterState();
 }
+
 
 const setTopicsFilter = () => {
     const topics = document.querySelectorAll('.label-topic');
@@ -159,7 +162,7 @@ const setTopicsFilter = () => {
             e.preventDefault();
             const value = element.getAttribute('filter-topic');
             const { topic } = select;
-            if(!topic.includes(value)) topic.push(value);
+            if (!topic.includes(value)) topic.push(value);
             renewFilter();
             setSelected('topic-label', 'topic');
             saveFilterState(); // Save state whenever the search input changes
@@ -172,7 +175,7 @@ const setTopicsFilter = () => {
             e.preventDefault();
             const value = element.getAttribute('filter-subtopic');
             const { topic } = select;
-            if(!topic.includes(value)) topic.push(value);
+            if (!topic.includes(value)) topic.push(value);
 
             renewFilter();
             setSelected('topic-label', 'topic');
@@ -188,7 +191,7 @@ const setFeeFilter = () => {
         item.addEventListener('click', (e) => {
             const number = item.getAttribute('filter-fee');
             const { fee } = select;
-            if(!fee.includes(number)) fee.push(number);
+            if (!fee.includes(number)) fee.push(number);
             renewFilter();
             setSelected('fee-label', 'fee');
             saveFilterState(); // Save state whenever the search input changes
@@ -198,7 +201,6 @@ const setFeeFilter = () => {
 }
 
 const setLocationFilter = () => {
-
     const locations = [];
     const removeRepeat = () => {
         const labelsLocations = document.querySelectorAll('.label-locations');
@@ -218,7 +220,7 @@ const setLocationFilter = () => {
                 e.preventDefault();
                 const value = lc.getAttribute('filter-location');
                 const { location } = select;
-                if(!location.includes(value)) location.push(value);
+                if (!location.includes(value)) location.push(value);
                 renewFilter();
                 setSelected('location-label', 'location');
                 saveFilterState(); // Save state whenever the search input changes
@@ -232,16 +234,15 @@ const setLocationFilter = () => {
 }
 
 const setProgramFilter = () => {
-
     const programs = document.querySelectorAll('.label-program');
-    
+
     programs.forEach((pr) => {
         pr.addEventListener('click', (e) => {
             e.preventDefault();
             const value = pr.getAttribute('filter-program');
 
             const { program } = select;
-            if(!program.includes(value)) program.push(value);
+            if (!program.includes(value)) program.push(value);
             renewFilter();
             setSelected('program-label', 'program');
             saveFilterState(); // Save state whenever the search input changes
@@ -250,6 +251,7 @@ const setProgramFilter = () => {
     })
 }
 
+
 const setCloseFilters = () => {
     document.querySelector('.wrapper-results').addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-select-span')) {
@@ -257,20 +259,25 @@ const setCloseFilters = () => {
             const removeValue = e.target.getAttribute('data-remove');
             select[property] = select[property].filter(item => item !== removeValue);
             
-            saveFilterState(); // Save the updated state to sessionStorage
-            renewFilter(); // Reapply filters based on updated select object
-            
+            // Save the updated state to sessionStorage
+            saveFilterState(); 
+
+            // Reapply filters based on updated select object
+            renewFilter(); 
+
             // Update UI to reflect the removal
             if (select[property].length === 0) {
                 document.querySelector(`.${property}-label`).parentElement.classList.add('hidden');
             } else {
                 setSelected(`${property}-label`, property);
             }
-            
-            updateResetButtonVisibility(); // Check if the reset button should be shown or hidden
+
+            // Check if the reset button should be shown or hidden
+            updateResetButtonVisibility(); 
         }
     });
 };
+
 
 
 
