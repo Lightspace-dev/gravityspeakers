@@ -11,7 +11,11 @@ const setHiddenClick = () => {
 }
 
 const hidden = () => {
-    hiddenTabs.click();
+    if (hiddenTabs) {
+        hiddenTabs.click();
+    } else {
+        console.error("Hidden tabs element not found.");
+    }
 }
 
 const setSimilarSpeakers = (pass, speaker) => {
@@ -79,8 +83,8 @@ const renewFilter = () => {
 
         // Program Filter
         if (program.length > 0 && pass) {
-            const currentProgram = speaker.querySelector('[filter-field="program"]').innerText;
-            pass = pass && program.includes(currentProgram);
+            const currentPrograms = speaker.querySelector('[filter-field="program"]').innerText.split(',').map(p => p.trim());
+            pass = pass && program.some(p => currentPrograms.includes(p));
         }
 
         // Fee Filter
@@ -98,7 +102,7 @@ const renewFilter = () => {
             });
         }
 
-          // Text Search Filter - Enhanced
+        // Text Search Filter - Enhanced
         if (search.trim() !== '' && pass) {
             const searchText = search.trim().toLowerCase(); // Normalize search text
             const name = speaker.querySelector('.item-data .link-11').textContent.toLowerCase(); // Normalize speaker name
@@ -116,7 +120,6 @@ const renewFilter = () => {
     // After applying all filters, update UI as necessary
     updateTotalSpeakers();
 };
-
 
 const showOrHiddenLabels = (current, listValue, remove, option) => {
     if (listValue.length > 0){
@@ -151,7 +154,6 @@ const setSelected = (label, option) => {
     // Save the updated filter state
     saveFilterState();
 }
-
 
 const setTopicsFilter = () => {
     const topics = document.querySelectorAll('.label-topic');
@@ -251,7 +253,6 @@ const setProgramFilter = () => {
     })
 }
 
-
 const setCloseFilters = () => {
     document.querySelector('.wrapper-results').addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-select-span')) {
@@ -259,27 +260,20 @@ const setCloseFilters = () => {
             const removeValue = e.target.getAttribute('data-remove');
             select[property] = select[property].filter(item => item !== removeValue);
             
-            // Save the updated state to sessionStorage
-            saveFilterState(); 
-
-            // Reapply filters based on updated select object
-            renewFilter(); 
-
+            saveFilterState(); // Save the updated state to sessionStorage
+            renewFilter(); // Reapply filters based on updated select object
+            
             // Update UI to reflect the removal
             if (select[property].length === 0) {
                 document.querySelector(`.${property}-label`).parentElement.classList.add('hidden');
             } else {
                 setSelected(`${property}-label`, property);
             }
-
-            // Check if the reset button should be shown or hidden
-            updateResetButtonVisibility(); 
+            
+            updateResetButtonVisibility(); // Check if the reset button should be shown or hidden
         }
     });
 };
-
-
-
 
 const setInputSearch = () => {
     inputSearch = document.querySelector('.text-field-7.w-input');
@@ -296,7 +290,6 @@ const setInputSearch = () => {
         }, 200);
     });
 };
-
 
 const setEventCloseTab = () => {
     const tabs = document.querySelectorAll('.tab-link-filters');
@@ -376,8 +369,6 @@ const resetFilters = () => {
 };
 
 document.getElementById('resetFilters').addEventListener('click', resetFilters);
-
-
 
 // Initial setup
 document.addEventListener('DOMContentLoaded', (event) => {
