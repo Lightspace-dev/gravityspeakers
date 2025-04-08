@@ -368,7 +368,12 @@ const resetFilters = () => {
     updateResetButtonVisibility();
 };
 
-document.getElementById('resetFilters').addEventListener('click', resetFilters);
+document.addEventListener('DOMContentLoaded', () => {
+  const resetButton = document.getElementById('resetFilters');
+  if (resetButton) {
+    resetButton.addEventListener('click', resetFilters);
+  }
+});
 
 // Initial setup
 document.addEventListener('DOMContentLoaded', (event) => {
