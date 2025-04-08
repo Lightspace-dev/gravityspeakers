@@ -388,3 +388,89 @@ intervalState = setInterval(() => {
         renewSearchPrevious(); // Restore and apply filter states upon page load
     }
 }, 100);
+
+
+function setButtonVisibility() {
+  const wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers')) || [];
+  document.querySelectorAll('[data-speaker-id]').forEach(button => {
+    const speakerId = button.getAttribute('data-speaker-id');
+    const addBtn = document.querySelector(`.div-sp-sl-wrapper-add[data-speaker-id="${speakerId}"]`);
+    const removeBtn = document.querySelector(`.div-sp-sl-wrapper-remove[data-speaker-id="${speakerId}"]`);
+    if (wishlist.includes(speakerId)) {
+      if (addBtn) addBtn.style.display = 'none';
+      if (removeBtn) removeBtn.style.display = 'block';
+    } else {
+      if (addBtn) addBtn.style.display = 'block';
+      if (removeBtn) removeBtn.style.display = 'none';
+    }
+  });
+}
+
+function addToWishlist(speakerId) {
+  let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
+  if (!wishlist.includes(speakerId)) {
+    wishlist.push(speakerId);
+    localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
+    updateWishlistCount?.();
+    setButtonVisibility();
+  }
+}
+
+function removeFromWishlist(speakerId) {
+  let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
+  wishlist = wishlist.filter(id => id !== speakerId);
+  localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
+  updateWishlistCount?.();
+  setButtonVisibility();
+}
+
+window.initLightspace = function () {
+  if (!localStorage.getItem('wishlistSpeakers')) {
+    localStorage.setItem('wishlistSpeakers', JSON.stringify([]));
+  }
+
+  try {
+    const searchFilter = new FsLibrary('.select-topic-wrapper');
+    searchFilter.nest({
+      textList: '.text-select-topic',
+      nestSource: '.select-topic-list',
+      nestTarget: '.select-topic-content'
+    });
+  } catch (e) {
+    console.warn('FsLibrary nest failed:', e);
+  }
+
+  setButtonVisibility();
+
+  document.querySelectorAll('.div-sp-sl-wrapper-add').forEach(button => {
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      const speakerId = this.getAttribute('data-speaker-id');
+      addToWishlist(speakerId);
+    });
+  });
+
+  document.querySelectorAll('.div-sp-sl-wrapper-remove').forEach(button => {
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      const speakerId = this.getAttribute('data-speaker-id');
+      removeFromWishlist(speakerId);
+    });
+  });
+
+  document.querySelectorAll('.read-more-btn').forEach(button => {
+    button.addEventListener('click', function () {
+      const paragraph = this.previousElementSibling;
+      paragraph.classList.toggle('expanded');
+      this.innerText = paragraph.classList.contains('expanded') ? 'Read Less...' : 'Read More...';
+    });
+  });
+
+  if (window.initCustomSearch) {
+    window.initCustomSearch();
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.initLightspace && window.initLightspace();
+});
