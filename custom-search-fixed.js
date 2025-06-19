@@ -259,7 +259,7 @@ const setCloseFilters = () => {
             const property = e.target.getAttribute('data-property');
             const removeValue = e.target.getAttribute('data-remove');
             select[property] = select[property].filter(item => item !== removeValue);
-            
+            delete selectedFilter[property]; // ✅ clear removed filter state
             saveFilterState(); // Save the updated state to sessionStorage
             renewFilter(); // Reapply filters based on updated select object
             
@@ -361,6 +361,7 @@ const updateResetButtonVisibility = () => {
 
 const resetFilters = () => {
     select = { topic: [], fee: [], location: [], program: [], search: '' };
+    for (let key in selectedFilter) delete selectedFilter[key]; // ✅ clear label tracking
     inputSearch.value = '';
     sessionStorage.removeItem('searchPrevious');
     renewFilter();
