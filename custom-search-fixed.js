@@ -137,7 +137,13 @@ const showOrHiddenLabels = (current, listValue, remove, option) => {
 
 const setSelected = (label, option) => {
     const currentOption = select[option];
-    selectedFilter[option] = { 'label': label, value: currentOption };
+    if (!currentOption || currentOption.length === 0) return;
+    // Clear old labels BEFORE re-rendering new ones
+document.querySelectorAll('.wrapper-results .result-select').forEach(el => el.remove());
+document.querySelectorAll('.wrapper-results > div').forEach(container => {
+  container.classList.add('hidden');
+});
+selectedFilter[option] = { 'label': label, value: currentOption };
     if (selectedFilter) {
         const wrapperResults = document.querySelector('.wrapper-results');
         wrapperResults.classList.remove('hidden');
