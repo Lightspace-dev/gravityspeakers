@@ -264,18 +264,49 @@ const setCloseFilters = () => {
         if (e.target.classList.contains('remove-select-span')) {
             const property = e.target.getAttribute('data-property');
             const removeValue = e.target.getAttribute('data-remove');
+
+            // 1. Update the 'select' object (your true filter state)
             select[property] = select[property].filter(item => item !== removeValue);
-            delete selectedFilter[property]; // ✅ clear removed filter state
-            saveFilterState(); // Save the updated state to sessionStorage
-            renewFilter(); // Reapply filters based on updated select object
-            
-            // Update UI to reflect the removal
+
+            // 2. Clear the specific property from selectedFilter if its array in 'select' is now empty
             if (select[property].length === 0) {
-                document.querySelector(`.${property}-label`).parentElement.classList.add('hidden');
+                delete selectedFilter[property]; // ✅ clear removed filter state from selectedFilter
             } else {
-                setSelected(`${property}-label`, property);
+                // If there are still items in the filter category, update selectedFilter
+                // This ensures selectedFilter always reflects the current 'select' state
+                selectedFilter[property].value = select[property];
             }
             
+            // Save the updated state to sessionStorage
+            saveFilterState(); 
+            
+            // Reapply filters based on updated select object
+            renewFilter(); 
+            
+            // Re-render the display of filter labels
+            const wrapperResults = document.querySelector('.wrapper-results');
+            const anyFiltersActiveForDisplay = Object.keys(selectedFilter).length > 0 || select.search;
+
+            if (anyFiltersActiveForDisplay) {
+                wrapperResults.classList.remove('hidden');
+                // Re-render all active filter labels from the updated selectedFilter
+                Object.entries(selectedFilter).forEach(([one, two]) => {
+                    const { label, value } = two; // 'value' here is the array from select[property]
+                    const currentLabel = document.querySelector(`.${label}`);
+                    currentLabel.innerHTML = ''; // Clear existing labels
+                    showOrHiddenLabels(currentLabel, value, true, one); // Re-add labels
+                });
+            } else {
+                // If no filters are active, hide the entire wrapper-results
+                wrapperResults.classList.add('hidden');
+            }
+
+            // Also, explicitly hide the parent element of the specific label if its list is empty
+            if (select[property].length === 0) {
+                document.querySelector(`.${property}-label`).parentElement.classList.add('hidden');
+            }
+
+
             updateResetButtonVisibility(); // Check if the reset button should be shown or hidden
         }
     });
