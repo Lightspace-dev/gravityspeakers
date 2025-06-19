@@ -370,7 +370,21 @@ const resetFilters = () => {
     for (let key in selectedFilter) delete selectedFilter[key]; // ✅ clear label tracking
     inputSearch.value = '';
     sessionStorage.removeItem('searchPrevious');
-    renewFilter();
+renewFilter();
+
+// ✅ Remove all individual filter labels
+document.querySelectorAll('.wrapper-results .result-select').forEach(el => el.remove());
+
+// ✅ Hide all filter group wrappers (like topic-label, fee-label, etc.)
+document.querySelectorAll('.wrapper-results > div').forEach(container => {
+  container.classList.add('hidden');
+});
+
+// ✅ Hide the entire results UI container if it's visible
+const wrapperResults = document.querySelector('.wrapper-results');
+if (wrapperResults) {
+  wrapperResults.classList.add('hidden');
+}
     updateTotalSpeakers();
     updateResetButtonVisibility();
 };
