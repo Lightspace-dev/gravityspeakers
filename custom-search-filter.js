@@ -58,95 +58,71 @@ function isPartiallyWithinRange(target, range) {
 }
 
 // --- NEW FUNCTION: RENDER FILTER LABELS (moved up) ---
+// --- THE FINAL RENDER FILTER LABELS (Using confirmed Webflow classes) ---
 const renderFilterLabels = () => {
     const wrapperResults = document.querySelector('.wrapper-results');
-    const filterLabelsContainer = document.querySelector('.filter-results-wrap');
 
-    if (!filterLabelsContainer) {
-        console.error("Filter labels container (.filter-results-wrap) not found.");
-        return;
-    }
+    // Select the specific divs where the filter values should be displayed
+    // These are the 'text-block-75' divs with their unique identifier classes
+    const topicResultsDiv = document.querySelector('.text-block-75.topic-label');
+    const feeResultsDiv = document.querySelector('.text-block-75.fee-label');
+    const locationResultsDiv = document.querySelector('.text-block-75.location-label');
+    const programResultsDiv = document.querySelector('.text-block-75.program-label');
 
-    // Clear everything inside the main filter labels container
-    filterLabelsContainer.innerHTML = '';
+    // Select the parent wrappers for each filter category (these are the 'w-layout-hflex flex-block' divs)
+    // These wrappers are responsible for hiding/showing the entire line like "TOPIC: [filters]"
+    const topicWrapper = topicResultsDiv?.closest('.w-layout-hflex.flex-block');
+    const feeWrapper = feeResultsDiv?.closest('.w-layout-hflex.flex-block');
+    const locationWrapper = locationResultsDiv?.closest('.w-layout-hflex.flex-block');
+    const programWrapper = programResultsDiv?.closest('.w-layout-hflex.flex-block');
 
     let anyFiltersActiveForDisplay = false;
 
-    // Process Topic Filter Labels
-    if (select.topic.length > 0) {
-        anyFiltersActiveForDisplay = true;
-        const topicHtml = select.topic.map(element => {
-            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='topic'>X</span></div>`;
-        }).join(' ');
-        filterLabelsContainer.insertAdjacentHTML('beforeend', `
-            <div class="div-block-140 is-topic-label">
-                <div class="topic-label">${topicHtml}</div>
-            </div>
-        `);
-    }
+    // Helper function to update a specific filter's display
+    const updateFilterDisplay = (valuesArray, targetDiv, wrapperDiv, propertyName) => {
+        if (targetDiv && wrapperDiv) { // Ensure both target div and its wrapper are found
+            if (valuesArray.length > 0) {
+                anyFiltersActiveForDisplay = true;
+                const htmlContent = valuesArray.map(element => {
+                    // This creates the individual filter label with the 'X' button
+                    return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='${propertyName}'>X</span></div>`;
+                }).join(' ');
+                targetDiv.innerHTML = htmlContent;
+                wrapperDiv.classList.remove('hidden'); // Show the wrapper (e.g., the "TOPIC:" line)
+            } else {
+                targetDiv.innerHTML = ''; // Clear content if no filters are active for this property
+                wrapperDiv.classList.add('hidden'); // Hide the wrapper
+            }
+        } else {
+            console.warn(`Missing elements for property: ${propertyName}. TargetDiv: ${targetDiv}, WrapperDiv: ${wrapperDiv}`);
+        }
+    };
 
-    // Process Fee Filter Labels
-    if (select.fee.length > 0) {
-        anyFiltersActiveForDisplay = true;
-        const feeHtml = select.fee.map(element => {
-            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='fee'>X</span></div>`;
-        }).join(' ');
-        filterLabelsContainer.insertAdjacentHTML('beforeend', `
-            <div class="div-block-140 is-fee-label">
-                <div class="fee-label">${feeHtml}</div>
-            </div>
-        `);
-    }
+    // Process each filter type
+    updateFilterDisplay(select.topic, topicResultsDiv, topicWrapper, 'topic');
+    updateFilterDisplay(select.fee, feeResultsDiv, feeWrapper, 'fee');
+    updateFilterDisplay(select.location, locationResultsDiv, locationWrapper, 'location');
+    updateFilterDisplay(select.program, programResultsDiv, programWrapper, 'program');
 
-    // Process Location Filter Labels
-    if (select.location.length > 0) {
-        anyFiltersActiveForDisplay = true;
-        const locationHtml = select.location.map(element => {
-            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='location'>X</span></div>`;
-        }).join(' ');
-        filterLabelsContainer.insertAdjacentHTML('beforeend', `
-            <div class="div-block-140 is-location-label">
-                <div class="location-label">${locationHtml}</div>
-            </div>
-        `);
-    }
-
-    // Process Program Filter Labels
-    if (select.program.length > 0) {
-        anyFiltersActiveForDisplay = true;
-        const programHtml = select.program.map(element => {
-            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='program'>X</span></div>`;
-        }).join(' ');
-        filterLabelsContainer.insertAdjacentHTML('beforeend', `
-            <div class="div-block-140 is-program-label">
-                <div class="program-label">${programHtml}</div>
-            </div>
-        `);
-    }
-
-    // Handle search input display (if you have a separate label for it)
+    // Check for search input to determine if the overall wrapper-results should be displayed
     if (select.search && select.search.trim() !== '') {
         anyFiltersActiveForDisplay = true;
-        // Example if you wanted a search label uncomment and adjust:
-        /*
-        filterLabelsContainer.insertAdjacentHTML('beforeend', `
-            <div class="div-block-140 is-search-label">
-                <div class="search-label">Search: ${select.search}<span class='remove-select-span' data-remove='${select.search}' data-property='search'>X</span></div>
-            </div>
-        `);
-        */
     }
 
-    // Show/hide the main wrapper-results based on if any filters are active
-    if (anyFiltersActiveForDisplay) {
-        wrapperResults.classList.remove('hidden');
+    // Show/hide the main .wrapper-results based on if any filters are active
+    if (wrapperResults) {
+        if (anyFiltersActiveForDisplay) {
+            wrapperResults.classList.remove('hidden');
+        } else {
+            wrapperResults.classList.add('hidden');
+        }
     } else {
-        wrapperResults.classList.add('hidden');
+        console.error("Main wrapper-results element (.wrapper-results) not found.");
     }
 
-    // After rendering, re-attach event listeners for "X" buttons
+    // After updating content and visibility, re-attach event listeners for "X" buttons
     setCloseFiltersListeners();
-    hidden(); // Keep this for closing tabs if needed
+    hidden(); // Keep this for closing filter tabs if still needed
 };
 
 
