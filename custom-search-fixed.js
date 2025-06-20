@@ -1,5 +1,5 @@
 let intervalState;
-const selectedFilter = {};
+const selectedFilter = {}; // Still useful for general state tracking if needed
 let select = { topic: [], fee: [], location: [], program: [], search: '' };
 let resultListFilter = [];
 let similarSpeakers = [];
@@ -52,10 +52,103 @@ function convertToRange(str) {
 
 function isPartiallyWithinRange(target, range) {
     if (!target || !range) return false;
-    return (target.min >= range.min && target.min <= range.max) || 
-           (target.max >= range.min && target.max <= range.max) || 
+    return (target.min >= range.min && target.min <= range.max) ||
+           (target.max >= range.min && target.max <= range.max) ||
            (range.min >= target.min && range.max <= target.max);
 }
+
+// --- NEW FUNCTION: RENDER FILTER LABELS (moved up) ---
+const renderFilterLabels = () => {
+    const wrapperResults = document.querySelector('.wrapper-results');
+    const filterLabelsContainer = document.querySelector('.filter-results-wrap');
+
+    if (!filterLabelsContainer) {
+        console.error("Filter labels container (.filter-results-wrap) not found.");
+        return;
+    }
+
+    // Clear everything inside the main filter labels container
+    filterLabelsContainer.innerHTML = '';
+
+    let anyFiltersActiveForDisplay = false;
+
+    // Process Topic Filter Labels
+    if (select.topic.length > 0) {
+        anyFiltersActiveForDisplay = true;
+        const topicHtml = select.topic.map(element => {
+            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='topic'>X</span></div>`;
+        }).join(' ');
+        filterLabelsContainer.insertAdjacentHTML('beforeend', `
+            <div class="div-block-140 is-topic-label">
+                <div class="topic-label">${topicHtml}</div>
+            </div>
+        `);
+    }
+
+    // Process Fee Filter Labels
+    if (select.fee.length > 0) {
+        anyFiltersActiveForDisplay = true;
+        const feeHtml = select.fee.map(element => {
+            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='fee'>X</span></div>`;
+        }).join(' ');
+        filterLabelsContainer.insertAdjacentHTML('beforeend', `
+            <div class="div-block-140 is-fee-label">
+                <div class="fee-label">${feeHtml}</div>
+            </div>
+        `);
+    }
+
+    // Process Location Filter Labels
+    if (select.location.length > 0) {
+        anyFiltersActiveForDisplay = true;
+        const locationHtml = select.location.map(element => {
+            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='location'>X</span></div>`;
+        }).join(' ');
+        filterLabelsContainer.insertAdjacentHTML('beforeend', `
+            <div class="div-block-140 is-location-label">
+                <div class="location-label">${locationHtml}</div>
+            </div>
+        `);
+    }
+
+    // Process Program Filter Labels
+    if (select.program.length > 0) {
+        anyFiltersActiveForDisplay = true;
+        const programHtml = select.program.map(element => {
+            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='program'>X</span></div>`;
+        }).join(' ');
+        filterLabelsContainer.insertAdjacentHTML('beforeend', `
+            <div class="div-block-140 is-program-label">
+                <div class="program-label">${programHtml}</div>
+            </div>
+        `);
+    }
+
+    // Handle search input display (if you have a separate label for it)
+    if (select.search && select.search.trim() !== '') {
+        anyFiltersActiveForDisplay = true;
+        // Example if you wanted a search label uncomment and adjust:
+        /*
+        filterLabelsContainer.insertAdjacentHTML('beforeend', `
+            <div class="div-block-140 is-search-label">
+                <div class="search-label">Search: ${select.search}<span class='remove-select-span' data-remove='${select.search}' data-property='search'>X</span></div>
+            </div>
+        `);
+        */
+    }
+
+    // Show/hide the main wrapper-results based on if any filters are active
+    if (anyFiltersActiveForDisplay) {
+        wrapperResults.classList.remove('hidden');
+    } else {
+        wrapperResults.classList.add('hidden');
+    }
+
+    // After rendering, re-attach event listeners for "X" buttons
+    setCloseFiltersListeners();
+    hidden(); // Keep this for closing tabs if needed
+};
+
 
 const renewFilter = () => {
     const { topic, fee, location, program, search } = select;
@@ -121,45 +214,21 @@ const renewFilter = () => {
     updateTotalSpeakers();
 };
 
-const showOrHiddenLabels = (current, listValue, remove, option) => {
-    if (listValue.length > 0){
-        current.innerHTML = listValue.map((element) => {
-            return `<div class='result-select'>${element}<span class='remove-select-span' data-remove='${element}' data-property='${option}'>X</span></div>`
-        }).join(' ');
-        setCloseFilters();
-    } 
-    if (remove) {
-        current.parentElement.classList.remove('hidden');
-    } else { 
-        current.parentElement.classList.add('hidden');
-    }
-}
-
+// --- MODIFIED: setSelected ---
 const setSelected = (label, option) => {
     const currentOption = select[option];
-    if (!currentOption || currentOption.length === 0) return;
-    // Clear old labels BEFORE re-rendering new ones
-document.querySelectorAll('.wrapper-results .result-select').forEach(el => el.remove());
-document.querySelectorAll('.wrapper-results > div').forEach(container => {
-  container.classList.add('hidden');
-});
-selectedFilter[option] = { 'label': label, value: currentOption };
-    if (selectedFilter) {
-        const wrapperResults = document.querySelector('.wrapper-results');
-        wrapperResults.classList.remove('hidden');
 
-        Object.entries(selectedFilter).forEach(([one, two]) => {
-            const { label, value } = two;
-            const currentLabel = document.querySelector(`.${label}`);
-            currentLabel.innerHTML = '';
-            showOrHiddenLabels(currentLabel, value, true, one);
-        })
-        hidden();
+    if (currentOption && currentOption.length > 0) {
+        selectedFilter[option] = { 'label': label, value: [...currentOption] }; // Use spread to copy array
+    } else {
+        delete selectedFilter[option]; // If select[option] is empty, remove it from selectedFilter
     }
 
-    // Save the updated filter state
-    saveFilterState();
-}
+    // Call the dedicated rendering function
+    renderFilterLabels();
+    hidden(); // Keep this for closing tabs if needed
+    saveFilterState(); // Save the updated filter state
+};
 
 const setTopicsFilter = () => {
     const topics = document.querySelectorAll('.label-topic');
@@ -259,57 +328,44 @@ const setProgramFilter = () => {
     })
 }
 
-const setCloseFilters = () => {
-    document.querySelector('.wrapper-results').addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-select-span')) {
-            const property = e.target.getAttribute('data-property');
-            const removeValue = e.target.getAttribute('data-remove');
+// --- MODIFIED: setCloseFiltersListeners and new handleRemoveFilterClick ---
 
-            // 1. Update the 'select' object (your true filter state)
-            select[property] = select[property].filter(item => item !== removeValue);
+// New handler function to separate logic from listener attachment
+const handleRemoveFilterClick = (e) => {
+    if (e.target.classList.contains('remove-select-span')) {
+        const property = e.target.getAttribute('data-property');
+        const removeValue = e.target.getAttribute('data-remove');
 
-            // 2. Clear the specific property from selectedFilter if its array in 'select' is now empty
-            if (select[property].length === 0) {
-                delete selectedFilter[property]; // ✅ clear removed filter state from selectedFilter
-            } else {
-                // If there are still items in the filter category, update selectedFilter
-                // This ensures selectedFilter always reflects the current 'select' state
-                selectedFilter[property].value = select[property];
-            }
-            
-            // Save the updated state to sessionStorage
-            saveFilterState(); 
-            
-            // Reapply filters based on updated select object
-            renewFilter(); 
-            
-            // Re-render the display of filter labels
-            const wrapperResults = document.querySelector('.wrapper-results');
-            const anyFiltersActiveForDisplay = Object.keys(selectedFilter).length > 0 || select.search;
+        // Update the 'select' object (your true filter state)
+        select[property] = select[property].filter(item => item !== removeValue);
 
-            if (anyFiltersActiveForDisplay) {
-                wrapperResults.classList.remove('hidden');
-                // Re-render all active filter labels from the updated selectedFilter
-                Object.entries(selectedFilter).forEach(([one, two]) => {
-                    const { label, value } = two; // 'value' here is the array from select[property]
-                    const currentLabel = document.querySelector(`.${label}`);
-                    currentLabel.innerHTML = ''; // Clear existing labels
-                    showOrHiddenLabels(currentLabel, value, true, one); // Re-add labels
-                });
-            } else {
-                // If no filters are active, hide the entire wrapper-results
-                wrapperResults.classList.add('hidden');
-            }
-
-            // Also, explicitly hide the parent element of the specific label if its list is empty
-            if (select[property].length === 0) {
-                document.querySelector(`.${property}-label`).parentElement.classList.add('hidden');
-            }
-
-
-            updateResetButtonVisibility(); // Check if the reset button should be shown or hidden
+        // If it was the search filter, clear the input too (assuming you add a search label)
+        if (property === 'search' && inputSearch) {
+            inputSearch.value = '';
         }
+
+        saveFilterState(); // Save updated state to sessionStorage
+        renewFilter();     // Reapply filters to speakers
+        renderFilterLabels(); // Re-render the display of filter labels from scratch
+        updateTotalSpeakers(); // Update speaker count
+        updateResetButtonVisibility(); // Update reset button visibility
+    }
+};
+
+// Renamed to explicitly show it sets listeners
+const setCloseFiltersListeners = () => {
+    // Remove previous listeners to prevent duplicates
+    // This is crucial because renderFilterLabels rebuilds elements
+    document.querySelectorAll('.remove-select-span').forEach(span => {
+        span.removeEventListener('click', handleRemoveFilterClick);
     });
+
+    // We now attach the listener to the parent `.wrapper-results` using event delegation
+    // This ensures new 'X' buttons always work without needing to re-query for each one.
+    // If a listener on wrapper-results already exists, this will re-add it, which is fine
+    // as it just makes sure the new handleRemoveFilterClick is the one that's active.
+    document.querySelector('.wrapper-results').removeEventListener('click', handleRemoveFilterClick); // Remove old one first
+    document.querySelector('.wrapper-results').addEventListener('click', handleRemoveFilterClick);
 };
 
 const setInputSearch = () => {
@@ -361,6 +417,7 @@ const saveFilterState = () => {
     updateResetButtonVisibility();
 };
 
+// --- MODIFIED: renewSearchPrevious ---
 const renewSearchPrevious = () => {
     const searchPreviousJSON = sessionStorage.getItem("searchPrevious");
     if (searchPreviousJSON) {
@@ -369,20 +426,15 @@ const renewSearchPrevious = () => {
             select[key] = searchPrevious[key];
         });
 
-        renewFilter();
-        
-        // Update UI for each filter type
-        ['topic', 'fee', 'location', 'program'].forEach(filterType => {
-            if (select[filterType].length) {
-                setSelected(`${filterType}-label`, filterType);
-            }
-        });
+        renewFilter(); // Apply filters based on loaded 'select' object
 
-        if (select.search) {
-            inputSearch.value = select.search; // Restore the search input value
-            setSelected('search', 'search'); // Optionally update the UI for the search filter
+        // Restore search input value
+        if (select.search && inputSearch) {
+            inputSearch.value = select.search;
         }
 
+        // Render the filter labels based on the restored 'select' state
+        renderFilterLabels();
         updateTotalSpeakers();
     }
     updateResetButtonVisibility();
@@ -396,138 +448,138 @@ const updateResetButtonVisibility = () => {
     }
 };
 
+// --- MODIFIED: resetFilters ---
 const resetFilters = () => {
     select = { topic: [], fee: [], location: [], program: [], search: '' };
-    for (let key in selectedFilter) delete selectedFilter[key]; // ✅ clear label tracking
+    // Clear selectedFilter as well
+    for (let key in selectedFilter) {
+        delete selectedFilter[key];
+    }
     inputSearch.value = '';
     sessionStorage.removeItem('searchPrevious');
-renewFilter();
-
-// ✅ Remove all individual filter labels
-document.querySelectorAll('.wrapper-results .result-select').forEach(el => el.remove());
-
-// ✅ Hide all filter group wrappers (like topic-label, fee-label, etc.)
-document.querySelectorAll('.wrapper-results > div').forEach(container => {
-  container.classList.add('hidden');
-});
-
-// ✅ Hide the entire results UI container if it's visible
-const wrapperResults = document.querySelector('.wrapper-results');
-if (wrapperResults) {
-  wrapperResults.classList.add('hidden');
-}
+    renewFilter(); // This will make all speakers visible
+    renderFilterLabels(); // <-- ADD THIS to clear the display labels
     updateTotalSpeakers();
     updateResetButtonVisibility();
 };
 
+// Consolidated DOMContentLoaded Listener
 document.addEventListener('DOMContentLoaded', () => {
-  const resetButton = document.getElementById('resetFilters');
-  if (resetButton) {
-    resetButton.addEventListener('click', resetFilters);
-  }
-});
-
-// Initial setup
-document.addEventListener('DOMContentLoaded', (event) => {
-    renewSearchPrevious();
-});
-
-intervalState = setInterval(() => {
-    if (document.readyState === 'complete') {
-        clearInterval(intervalState);
-        setHiddenClick();
-        setTopicsFilter();
-        setFeeFilter();
-        setLocationFilter();
-        setProgramFilter();
-        setInputSearch();
-        setEventCloseTab();
-        renewSearchPrevious(); // Restore and apply filter states upon page load
+    const resetButton = document.getElementById('resetFilters');
+    if (resetButton) {
+        resetButton.addEventListener('click', resetFilters);
     }
-}, 100);
+
+    setHiddenClick();
+    setTopicsFilter();
+    setFeeFilter();
+    setLocationFilter();
+    setProgramFilter();
+    setInputSearch();
+    setEventCloseTab();
+    renewSearchPrevious(); // Restore and apply filter states upon page load
+    setCloseFiltersListeners(); // Attach listeners initially
+
+    // The existing intervalState and window.initLightspace logic
+    intervalState = setInterval(() => {
+        if (document.readyState === 'complete') {
+            clearInterval(intervalState);
+            // These functions are already called above, so no need to call them again here
+            // setHiddenClick();
+            // setTopicsFilter();
+            // setFeeFilter();
+            // setLocationFilter();
+            // setProgramFilter();
+            // setInputSearch();
+            // setEventCloseTab();
+            // renewSearchPrevious();
+            // setCloseFiltersListeners();
+            // The purpose of this interval is mainly for window.initLightspace now
+        }
+    }, 100);
+
+    // Initial call to window.initLightspace
+    window.initLightspace && window.initLightspace();
+});
 
 
 function setButtonVisibility() {
-  const wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers')) || [];
-  document.querySelectorAll('[data-speaker-id]').forEach(button => {
-    const speakerId = button.getAttribute('data-speaker-id');
-    const addBtn = document.querySelector(`.div-sp-sl-wrapper-add[data-speaker-id="${speakerId}"]`);
-    const removeBtn = document.querySelector(`.div-sp-sl-wrapper-remove[data-speaker-id="${speakerId}"]`);
-    if (wishlist.includes(speakerId)) {
-      if (addBtn) addBtn.style.display = 'none';
-      if (removeBtn) removeBtn.style.display = 'block';
-    } else {
-      if (addBtn) addBtn.style.display = 'block';
-      if (removeBtn) removeBtn.style.display = 'none';
-    }
-  });
+    const wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers')) || [];
+    document.querySelectorAll('[data-speaker-id]').forEach(button => {
+        const speakerId = button.getAttribute('data-speaker-id');
+        const addBtn = document.querySelector(`.div-sp-sl-wrapper-add[data-speaker-id="${speakerId}"]`);
+        const removeBtn = document.querySelector(`.div-sp-sl-wrapper-remove[data-speaker-id="${speakerId}"]`);
+        if (wishlist.includes(speakerId)) {
+            if (addBtn) addBtn.style.display = 'none';
+            if (removeBtn) removeBtn.style.display = 'block';
+        } else {
+            if (addBtn) addBtn.style.display = 'block';
+            if (removeBtn) removeBtn.style.display = 'none';
+        }
+    });
 }
 
 function addToWishlist(speakerId) {
-  let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
-  if (!wishlist.includes(speakerId)) {
-    wishlist.push(speakerId);
-    localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
-    updateWishlistCount?.();
-    setButtonVisibility();
-  }
+    let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
+    if (!wishlist.includes(speakerId)) {
+        wishlist.push(speakerId);
+        localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
+        updateWishlistCount?.();
+        setButtonVisibility();
+    }
 }
 
 function removeFromWishlist(speakerId) {
-  let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
-  wishlist = wishlist.filter(id => id !== speakerId);
-  localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
-  updateWishlistCount?.();
-  setButtonVisibility();
+    let wishlist = JSON.parse(localStorage.getItem('wishlistSpeakers'));
+    wishlist = wishlist.filter(id => id !== speakerId);
+    localStorage.setItem('wishlistSpeakers', JSON.stringify(wishlist));
+    updateWishlistCount?.();
+    setButtonVisibility();
 }
 
 window.initLightspace = function () {
-  if (!localStorage.getItem('wishlistSpeakers')) {
-    localStorage.setItem('wishlistSpeakers', JSON.stringify([]));
-  }
+    if (!localStorage.getItem('wishlistSpeakers')) {
+        localStorage.setItem('wishlistSpeakers', JSON.stringify([]));
+    }
 
-  try {
-    const searchFilter = new FsLibrary('.select-topic-wrapper');
-    searchFilter.nest({
-      textList: '.text-select-topic',
-      nestSource: '.select-topic-list',
-      nestTarget: '.select-topic-content'
+    try {
+        const searchFilter = new FsLibrary('.select-topic-wrapper');
+        searchFilter.nest({
+            textList: '.text-select-topic',
+            nestSource: '.select-topic-list',
+            nestTarget: '.select-topic-content'
+        });
+    } catch (e) {
+        console.warn('FsLibrary nest failed:', e);
+    }
+
+    setButtonVisibility();
+
+    document.querySelectorAll('.div-sp-sl-wrapper-add').forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            const speakerId = this.getAttribute('data-speaker-id');
+            addToWishlist(speakerId);
+        });
     });
-  } catch (e) {
-    console.warn('FsLibrary nest failed:', e);
-  }
 
-  setButtonVisibility();
-
-  document.querySelectorAll('.div-sp-sl-wrapper-add').forEach(button => {
-    button.addEventListener('click', function (event) {
-      event.preventDefault();
-      const speakerId = this.getAttribute('data-speaker-id');
-      addToWishlist(speakerId);
+    document.querySelectorAll('.div-sp-sl-wrapper-remove').forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            const speakerId = this.getAttribute('data-speaker-id');
+            removeFromWishlist(speakerId);
+        });
     });
-  });
 
-  document.querySelectorAll('.div-sp-sl-wrapper-remove').forEach(button => {
-    button.addEventListener('click', function (event) {
-      event.preventDefault();
-      const speakerId = this.getAttribute('data-speaker-id');
-      removeFromWishlist(speakerId);
+    document.querySelectorAll('.read-more-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const paragraph = this.previousElementSibling;
+            paragraph.classList.toggle('expanded');
+            this.innerText = paragraph.classList.contains('expanded') ? 'Read Less...' : 'Read More...';
+        });
     });
-  });
 
-  document.querySelectorAll('.read-more-btn').forEach(button => {
-    button.addEventListener('click', function () {
-      const paragraph = this.previousElementSibling;
-      paragraph.classList.toggle('expanded');
-      this.innerText = paragraph.classList.contains('expanded') ? 'Read Less...' : 'Read More...';
-    });
-  });
-
-  if (window.initCustomSearch) {
-    window.initCustomSearch();
-  }
+    if (window.initCustomSearch) {
+        window.initCustomSearch();
+    }
 };
-
-document.addEventListener('DOMContentLoaded', () => {
-  window.initLightspace && window.initLightspace();
-});
