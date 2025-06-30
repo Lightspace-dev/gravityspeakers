@@ -207,36 +207,72 @@ const setSelected = (label, option) => {
 };
 
 const setTopicsFilter = () => {
-    const topics = document.querySelectorAll('.label-topic');
-    const subTopics = document.querySelectorAll('.label-subtopic');
+    const topics = document.querySelectorAll('.label-topic'); // These are your main topics (Text Block 64)
+    const subTopics = document.querySelectorAll('.label-subtopic'); // These are your subtopics (Text Block 66)
 
     topics.forEach(element => {
         element.addEventListener('click', (e) => {
             e.preventDefault();
             const value = element.getAttribute('filter-topic');
-            const { topic } = select;
-            if (!topic.includes(value)) topic.push(value);
+
+            // Find the direct parent of this 'element' that contains Text Block 67 and select-topic-content
+            // Based on your screenshot, this would be the 'div block' that is parent to both Text Block 64 and Text Block 67
+            const filterItemParent = element.closest('.filter-item'); // Assuming 'filter-item' is the w-dyn-item role="listitem"
+            const subtopicContainerWrapper = filterItemParent?.querySelector('.text-block-67'); // This is the new target!
+            const subtopicContent = filterItemParent?.querySelector('.select-topic-content.div-block-56'); // The actual dropdown content
+
+            // Toggle active class on the main topic
+            element.classList.toggle('active');
+
+            if (element.classList.contains('active')) {
+                // Add topic to selection
+                if (!select.topic.includes(value)) select.topic.push(value);
+
+                // Show the subtopic container wrapper (Text Block 67) and the actual subtopic content
+                if (subtopicContainerWrapper) subtopicContainerWrapper.classList.remove('hidden'); // Assuming 'hidden' hides it
+                if (subtopicContent) subtopicContent.classList.remove('hidden'); // Ensure this is also visible
+
+            } else {
+                // Remove topic from selection
+                select.topic = select.topic.filter(item => item !== value);
+
+                // Hide the subtopic container wrapper (Text Block 67) and the actual subtopic content
+                if (subtopicContainerWrapper) subtopicContainerWrapper.classList.add('hidden');
+                if (subtopicContent) subtopicContent.classList.add('hidden');
+
+            
+            }
+
             renewFilter();
-            setSelected('topic-label', 'topic');
-            saveFilterState(); // Save state whenever the search input changes
+            setSelected('topic-label', 'topic'); // Assuming 'topic-label' is for the main topic
+            saveFilterState();
             updateTotalSpeakers();
         });
     });
 
+    // Click listener for individual subtopics (Text Block 66)
     subTopics.forEach(element => {
         element.addEventListener('click', (e) => {
             e.preventDefault();
             const value = element.getAttribute('filter-subtopic');
-            const { topic } = select;
-            if (!topic.includes(value)) topic.push(value);
+            const { topic } = select; // 'topic' array now holds both main topics and subtopics
+
+            // Toggle active class on the subtopic
+            element.classList.toggle('active');
+
+            if (element.classList.contains('active')) {
+                if (!topic.includes(value)) topic.push(value);
+            } else {
+                select.topic = topic.filter(item => item !== value);
+            }
 
             renewFilter();
-            setSelected('topic-label', 'topic');
-            saveFilterState(); // Save state whenever the search input changes
+            setSelected('topic-label', 'topic'); // Keep using topic-label for display of all topics/subtopics
+            saveFilterState();
             updateTotalSpeakers();
         });
     });
-}
+};
 
 const setFeeFilter = () => {
     const elements = document.querySelectorAll('.text-range-item');
